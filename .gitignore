@@ -11,6 +11,7 @@ moment_detr/
 xyf/
 data/
 run_on_video/
+.vscode/
 
 test.py
 
