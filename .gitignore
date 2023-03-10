@@ -10,6 +10,7 @@ results/
 moment_detr/
 xyf/
 data/
+run_on_video/
 
 test.py
 
