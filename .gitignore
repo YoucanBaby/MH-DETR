@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary data
+debug_results/
+features/
+results/
+moment_detr/
+xyf/
+data/
+
+test.py
+
+
