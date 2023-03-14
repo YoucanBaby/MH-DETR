@@ -182,13 +182,13 @@ def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset,
                 logger.info("The checkpoint file has been updated.")
             else:
                 es_cnt += 1
-                if opt.max_es_cnt != -1 and es_cnt > opt.max_es_cnt:  # early stop
+                if opt.max_es_cnt != -1 and es_cnt > opt.max_es_cnt:    #early stop
                     with open(opt.train_log_filepath, "a") as f:
                         f.write(f"Early Stop at epoch {epoch_i}")
                     logger.info(f"\n>>>>> Early stop at epoch {epoch_i}  {prev_best_score}\n")
                     break
 
-            # save ckpt
+            # save ckpt (update latest ckpt)
             checkpoint = {
                 "model": model.state_dict(),
                 "optimizer": optimizer.state_dict(),

@@ -19,7 +19,7 @@ from umt.config import TestOptions
 from umt.start_end_dataset import StartEndDataset, start_end_collate, prepare_batch_inputs
 from umt.postprocessing import PostProcessor
 from umt.models.loss import build_criterion
-from umt.models.umt import build_umt
+from umt.models.umt import build_umt, build_umt_v2, build_umt_v3
 
 from standalone_eval.eval import eval_submission
 
@@ -90,6 +90,7 @@ def eval_epoch_post_processing(submission, opt, gt_data, save_submission_filenam
             latest_file_paths = [submission_nms_path, ]
     else:
         metrics_nms = None
+        
     return metrics, metrics_nms, latest_file_paths
 
 
@@ -108,12 +109,12 @@ def compute_mr_results(model, eval_loader, opt, epoch_i=None, criterion=None, tb
         query_meta = batch[0]
         model_inputs, targets = prepare_batch_inputs(batch[1], opt.device, non_blocking=opt.pin_memory)
         outputs = model(**model_inputs)
-        prob = F.softmax(outputs["score"], -1)  # (batch_size, #queries, #classes=2)
+        prob = F.softmax(outputs["score"], -1)  #(B, #queries, #classes=2)
         
         if opt.span_loss_type == "l1":
-            scores = prob[..., 0]  # * (batch_size, #queries)  foreground label is 0, we directly take it
-            pred_spans = outputs["span"]  # (bsz, #queries, 2)
-            _saliency_scores = outputs["saliency"].half()  # (bsz, L)
+            scores = prob[..., 0]           #(B, #queries)  foreground label is 0, we directly take it
+            pred_spans = outputs["span"]    #(B, #queries, 2)
+            _saliency_scores = outputs["saliency"].half()  # (B, T)
             saliency_scores = []
             valid_vid_lengths = model_inputs["vid_mask"].sum(1).cpu().tolist()
             for j in range(len(valid_vid_lengths)):
@@ -166,6 +167,7 @@ def compute_mr_results(model, eval_loader, opt, epoch_i=None, criterion=None, tb
         process_func_names=("clip_ts", "round_multiple")
     )
     mr_res = post_processor(mr_res)
+    
     return mr_res, loss_meters
 
 
@@ -193,10 +195,13 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
     )
 
     submission, eval_loss_meters = get_eval_res(model, eval_loader, opt, epoch_i, criterion, tb_writer)
+    
     if opt.no_sort_results:
         save_submission_filename = save_submission_filename.replace(".jsonl", "_unsorted.jsonl")
-    metrics, metrics_nms, latest_file_paths = eval_epoch_post_processing(
-        submission, opt, eval_dataset.data, save_submission_filename)
+        
+    metrics, metrics_nms, latest_file_paths = \
+                    eval_epoch_post_processing(submission, opt, eval_dataset.data, save_submission_filename)
+    
     return metrics, metrics_nms, eval_loss_meters, latest_file_paths
 
 
@@ -205,6 +210,8 @@ def setup_model(opt):
     logger.info("setup model/criterion/optimizer/scheduler")
     
     model = build_umt(opt)
+    # model = build_umt_v2(opt)
+    # model = build_umt_v3(opt)
     criterion = build_criterion(opt)
     
     if opt.device.type == "cuda":
@@ -214,8 +221,6 @@ def setup_model(opt):
 
     # https://huggingface.co/docs/timm/reference/optimizers
     optimizer = create_optimizer(opt, model)
-    # param_dicts = [{"params": [p for n, p in model.named_parameters() if p.requires_grad]}]
-    # optimizer = torch.optim.Adam(param_dicts, opt.lr, weight_decay=opt.weight_decay)
     lr_scheduler, _ = create_scheduler(opt, optimizer)
 
     if opt.resume is not None:

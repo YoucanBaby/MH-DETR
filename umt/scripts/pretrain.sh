@@ -1,4 +1,4 @@
-dset_name=hl
+dset_name=umt-detr
 ctx_mode=video_tef
 v_feat_types=slowfast_clip
 t_feat_type=clip 
@@ -35,14 +35,14 @@ else
 fi
 
 #### training
-bsz=256
+train_batch_size=256
 num_workers=8
-n_epoch=100
+epochs=100
 max_es_cnt=100
 exp_id=pt
 
 
-PYTHONPATH=$PYTHONPATH:. python xyf/train.py \
+PYTHONPATH=$PYTHONPATH:. python umt/train.py \
 --dset_name ${dset_name} \
 --ctx_mode ${ctx_mode} \
 --train_path ${train_path} \
@@ -52,10 +52,10 @@ PYTHONPATH=$PYTHONPATH:. python xyf/train.py \
 --v_feat_dim ${v_feat_dim} \
 --t_feat_dir ${t_feat_dir} \
 --t_feat_dim ${t_feat_dim} \
---bsz ${bsz} \
+--train_batch_size ${train_batch_size} \
 --results_root ${results_root} \
 --num_workers ${num_workers} \
 --exp_id ${exp_id} \
---n_epoch ${n_epoch} \
+--epochs ${epochs} \
 --max_es_cnt ${max_es_cnt} \
 ${@:1}

@@ -145,7 +145,7 @@ class CrossAttentionLayer(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(qkv_dim*4, qkv_dim),
             nn.Dropout(dropout),
-        )
+        ) 
         self.norm_ffn = nn.LayerNorm(qkv_dim)
          
     def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):            

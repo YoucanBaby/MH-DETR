@@ -169,7 +169,7 @@ def compute_hl_hit1(qid2preds, qid2gt_scores_binary):
 
 def compute_hl_ap(qid2preds, qid2gt_scores_binary, num_workers=8, chunksize=50):
     qid2pred_scores = {k: v["pred_saliency_scores"] for k, v in qid2preds.items()}
-    ap_scores = np.zeros((len(qid2preds), 3))   # (#preds, 3)
+    ap_scores = np.zeros((len(qid2preds), 3))       #(#preds, 3)
     qids = list(qid2preds.keys())
     input_tuples = []
     for idx, qid in enumerate(qids):
@@ -229,8 +229,10 @@ def eval_highlight(submission, ground_truth, verbose=True):
     qid2preds = {d["qid"]: d for d in submission}
     qid2gt_scores_full_range = {d["qid"]: mk_gt_scores(d) for d in ground_truth}  # scores in range [0, 4]
     # gt_saliency_score_min: int, in [0, 1, 2, 3, 4]. The minimum score for a positive clip.
+    
     gt_saliency_score_min_list = [2, 3, 4]
     saliency_score_names = ["Fair", "Good", "VeryGood"]
+    
     highlight_det_metrics = {}
     for gt_saliency_score_min, score_name in zip(gt_saliency_score_min_list, saliency_score_names):
         start_time = time.time()

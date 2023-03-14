@@ -78,7 +78,7 @@ class BaseOptions(object):
                             help="if None, will be set automatically when using --resume_all")
         
         # Optimizer hyper-parameters        
-        parser.add_argument('--opt', type=str, default='adamw', metavar='OPTIMIZER', choices=['adamw'], 
+        parser.add_argument('--opt', type=str, default='adamw', metavar='OPTIMIZER', choices=['adamw', 'adam', 'sgd'], 
                             help='Optimizer (default: "adamw"')
         parser.add_argument('--weight-decay', type=float, default=1e-4, help='weight decay (default: 1e-4)')
         parser.add_argument("--grad_clip", type=float, default=0.1, help="perform gradient clip, -1: disable")
@@ -116,14 +116,17 @@ class BaseOptions(object):
         
         # * Loss weight
         parser.add_argument("--saliency_bce", type=float, default=1, help="weight for saliency loss, set to 0 will ignore")
-        parser.add_argument('--saliency_hinge', type=float, default=0)
+        parser.add_argument('--saliency_hinge', type=float, default=0.1)
         parser.add_argument('--span_align', type=float, default=0)
         parser.add_argument('--span_score', type=float, default=4, help="VG score weight for the matching cost and loss")
         parser.add_argument('--span_l1', type=float, default=10, help="VG L1 weight for the matching cost and loss")
         parser.add_argument('--span_giou', type=float, default=1, help="VG gIoU weight for the matching cost and loss")
-        parser.add_argument("--weight_contrastive_align_loss", default=0.0, type=float)
+        parser.add_argument("--coarse_contrastive", type=float, default=0, help="loss weight of coarse-grained contrastive learning")
+        parser.add_argument("--vghd_vg_contrastive", type=float, default=0, help="loss weight of contrastive learning between vghd and vg")
+        parser.add_argument("--vid_txt_contrastive", type=float, default=0, help="loss weight of contrastive learning between vid and txt")
         ## * Loss hyper-parameters
         parser.add_argument('--coef_eos', default=0.1, type=float, help="Relative classification coefficient of the no-object class")
+        parser.add_argument("--temperature", type=float, default=0.07, help="temperature nce contrastive_align_loss, do not change")
         
         
         #TODO delete
@@ -140,7 +143,6 @@ class BaseOptions(object):
         #TODO delete
         if 1:
             # Do not change
-            parser.add_argument("--nce_temperature", type=float, default=0.07, help="temperature nce contrastive_align_loss, do not change")
             # Ambiguous hyper-pparameters
             parser.add_argument("--max_before_nms", type=int, default=10)
             parser.add_argument("--max_after_nms", type=int, default=10)

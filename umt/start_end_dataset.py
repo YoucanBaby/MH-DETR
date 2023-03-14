@@ -101,14 +101,14 @@ class StartEndDataset(Dataset):
                 model_inputs["saliency_neg_labels"] = \
                     self.get_saliency_labels(meta["relevant_clip_ids"], meta["saliency_scores"], ctx_l)
             else:
-                #TODO only one gt
-                model_inputs["saliency_labels"] = \
+                model_inputs["saliency_labels"], \
+                model_inputs["saliency_pos_labels"], \
+                model_inputs["saliency_neg_labels"] = \
                     self.get_saliency_labels_sub_as_query(meta["relevant_windows"][0], ctx_l)
                     
         return dict(meta=meta, model_inputs=model_inputs)
 
     def get_saliency_labels_sub_as_query(self, gt_window, ctx_l, max_n=2):
-        #TODO ?
         gt_st = int(gt_window[0] / self.clip_len)
         gt_ed = max(0, min(int(gt_window[1] / self.clip_len), ctx_l) - 1)
         if gt_st > gt_ed:
@@ -121,7 +121,11 @@ class StartEndDataset(Dataset):
 
         neg_pool = list(range(0, gt_st)) + list(range(gt_ed+1, ctx_l))
         neg_clip_indices = random.sample(neg_pool, k=max_n)
-        return pos_clip_indices, neg_clip_indices
+        
+        scores = torch.zeros((75))
+        scores[gt_st:gt_ed+1] = 1
+        
+        return scores, pos_clip_indices, neg_clip_indices
 
     def get_saliency_labels(self, rel_clip_ids, scores, ctx_l, max_n=1):
         """
