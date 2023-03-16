@@ -28,6 +28,7 @@ def compute_temporal_iou_batch_paired(pred_windows, gt_windows):
     )
     union = np.maximum(pred_windows[:, 1], gt_windows[:, 1]) \
             - np.minimum(pred_windows[:, 0], gt_windows[:, 0])  # not the correct union though
+            
     return np.divide(intersection, union, out=np.zeros_like(intersection), where=union != 0)
 
 

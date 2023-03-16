@@ -1,9 +1,11 @@
+import argparse
 import os
 import time
-import torch
-import argparse
 
-from utils.basic_utils import mkdirp, load_json, save_json, make_zipfile, dict_to_markdown
+import torch
+
+from utils.basic_utils import (dict_to_markdown, load_json, make_zipfile,
+                               mkdirp, save_json)
 
 
 class BaseOptions(object):
@@ -22,7 +24,7 @@ class BaseOptions(object):
         self.initialized = True
         parser = argparse.ArgumentParser('Model training and evaluation script')
         
-        parser.add_argument("--train_batch_size", type=int, default=32, help="mini-batch size at training")
+        parser.add_argument("--train_batch_size", type=int, default=64, help="mini-batch size at training")
         parser.add_argument("--eval_batch_size", type=int, default=100, help="mini-batch size at inference, for query")
         parser.add_argument("--epochs", type=int, default=200, help="number of epochs to run")
         parser.add_argument("--eval_epoch_interval", type=int, default=5, help="number of interval eval at training")
@@ -47,6 +49,7 @@ class BaseOptions(object):
                                  "ref: https://discuss.pytorch.org/t/should-we-set-non-blocking-to-true/38234/4")
 
         # Dataset config
+        parser.add_argument("--dataset", type=str, default="qvhighlights", choices=['qvhighlights', 'charades'])
         parser.add_argument("--max_v_l", type=int, default=75)
         parser.add_argument("--max_q_l", type=int, default=32)
         parser.add_argument("--clip_length", type=int, default=2)
@@ -169,6 +172,7 @@ class BaseOptions(object):
     def parse(self):
         if not self.initialized:
             self.initialize()
+
         opt = self.parser.parse_args()
 
         if opt.debug:

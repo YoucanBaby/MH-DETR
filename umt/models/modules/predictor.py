@@ -18,7 +18,7 @@ class UmtPredictor(nn.Module):
         pred_saliency = self.saliency_ffn(qry).squeeze(-1)  #[B, T]
         pred_span = self.span_ffn(vg_qry).sigmoid()         #[B, M, 2]
         pred_score = self.score_ffn(vg_qry)                 #[B, M, 2]
-        # pred_score = self.score_ffn(vg_qry).sigmoid()                   #[B, M, 2]
+        # pred_score = self.score_ffn(vg_qry).sigmoid()       #[B, M, 2]
         
         outputs = {}
         outputs.update(dict(

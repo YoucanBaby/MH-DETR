@@ -1,30 +1,30 @@
-import os
-import time
 import json
+import logging
+import os
 import pprint
 import random
-import numpy as np
-from tqdm import tqdm, trange
+import sys
+import time
 from collections import defaultdict
-from fvcore.nn import flop_count, FlopCountAnalysis, flop_count_str
 
+import numpy as np
 import torch
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
+import torch.nn as nn
+from fvcore.nn import FlopCountAnalysis, flop_count, flop_count_str
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm, trange
 
-import sys
 sys.path.append("/home/xuyifang/VGHD/Moment-DETR")
 
 from umt.config import BaseOptions
-from umt.start_end_dataset import StartEndDataset, start_end_collate, prepare_batch_inputs
-from umt.inference import eval_epoch, start_inference, setup_model
+from umt.inference import eval_epoch, setup_model, start_inference
+from umt.start_end_dataset import (StartEndDataset, prepare_batch_inputs,
+                                   start_end_collate)
 from utils.basic_utils import AverageMeter, dict_to_markdown
 from utils.model_utils import count_parameters
 
-
-import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s - %(message)s",
                     datefmt="%Y-%m-%d %H:%M:%S",
@@ -87,7 +87,6 @@ def train_one_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_
         timer_dataloading = time.time()
         if opt.debug and batch_idx == 3:
             break
-
 
     # print/add logs
     tb_writer.add_scalar("Train/lr", float(optimizer.param_groups[0]["lr"]), epoch_i+1)
@@ -162,7 +161,7 @@ def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset,
             for k, v in metrics["brief"].items():
                 tb_writer.add_scalar(f"Eval/{k}", float(v), epoch_i+1)
 
-            stop_score = metrics["brief"]["MR-full-mAP"]
+            stop_score = metrics["brief"]["MR-full-R1@0.5"]
             if stop_score > prev_best_score:
                 es_cnt = 0
                 prev_best_score = stop_score
@@ -228,6 +227,7 @@ def start_training():
     if 1:
         # Train dataset
         dataset_config = dict(
+            dataset=opt.dataset,
             dset_name=opt.dset_name,
             data_path=opt.train_path,
             v_feat_dirs=opt.v_feat_dirs,
@@ -261,12 +261,11 @@ def start_training():
     
     # Log parameters and GFLOPs of model
     if 1:
-        # logger.info(f"Model {model}")
         device = torch.device('cuda')
-        vid = torch.ones([1, 75, 2818], device=device)
-        txt = torch.ones([1, 32, 512], device=device)
-        vid_mask = torch.ones([1, 75], device=device)
-        txt_mask = torch.ones([1, 32], device=device)
+        vid = torch.ones([1, opt.max_v_l, opt.v_feat_dim], device=device)   #(1, 75, 2816)
+        txt = torch.ones([1, opt.max_q_l, opt.t_feat_dim], device=device)   #(1, 32, 512)
+        vid_mask = torch.ones([1, opt.max_v_l], device=device)
+        txt_mask = torch.ones([1, opt.max_q_l], device=device)
         inputs = (vid, txt, vid_mask, txt_mask)
         print(flop_count_str(FlopCountAnalysis(model, inputs)))
         count_parameters(model)

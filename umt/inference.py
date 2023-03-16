@@ -1,35 +1,29 @@
-import pprint
-from tqdm import tqdm, trange
-import numpy as np
+import logging
 import os
+import pprint
 import time
 from collections import OrderedDict, defaultdict
 
-import torch
-import torch.nn.functional as F
-import torch.backends.cudnn as cudnn
-from torch.utils.data import DataLoader
-
+import numpy as np
 import timm
+import torch
+import torch.backends.cudnn as cudnn
+import torch.nn.functional as F
 from timm.optim import create_optimizer
 from timm.scheduler import create_scheduler
-
-from umt.config import TestOptions
-
-from umt.start_end_dataset import StartEndDataset, start_end_collate, prepare_batch_inputs
-from umt.postprocessing import PostProcessor
-from umt.models.loss import build_criterion
-from umt.models.umt import build_umt, build_umt_v2, build_umt_v3
+from torch.utils.data import DataLoader
+from tqdm import tqdm, trange
 
 from standalone_eval.eval import eval_submission
-
-from utils.basic_utils import save_jsonl, save_json
-from utils.temporal_nms import temporal_nms
+from umt.config import TestOptions
+from umt.models.loss import build_criterion
+from umt.models.umt import build_umt, build_umt_v2, build_umt_v3
+from umt.postprocessing import PostProcessor
+from umt.start_end_dataset import (StartEndDataset, prepare_batch_inputs,
+                                   start_end_collate)
+from utils.basic_utils import AverageMeter, save_json, save_jsonl
 from utils.span_utils import span_cxw_to_xx
-from utils.basic_utils import AverageMeter
-
-
-import logging
+from utils.temporal_nms import temporal_nms
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s - %(message)s",
@@ -56,10 +50,13 @@ def eval_epoch_post_processing(submission, opt, gt_data, save_submission_filenam
     save_jsonl(submission, submission_path)
 
     if opt.eval_split_name in ["val", "test"]:  # since test_public has no GT
+        
         metrics = eval_submission(
             submission, gt_data,
+            opt,
             verbose=opt.debug, match_number=not opt.debug
         )
+        
         save_metrics_path = submission_path.replace(".jsonl", "_metrics.json")
         save_json(metrics, save_metrics_path, save_pretty=True, sort_keys=False)
         latest_file_paths = [submission_path, save_metrics_path]
@@ -114,6 +111,7 @@ def compute_mr_results(model, eval_loader, opt, epoch_i=None, criterion=None, tb
         if opt.span_loss_type == "l1":
             scores = prob[..., 0]           #(B, #queries)  foreground label is 0, we directly take it
             pred_spans = outputs["span"]    #(B, #queries, 2)
+            
             _saliency_scores = outputs["saliency"].half()  # (B, T)
             saliency_scores = []
             valid_vid_lengths = model_inputs["vid_mask"].sum(1).cpu().tolist()
@@ -131,7 +129,11 @@ def compute_mr_results(model, eval_loader, opt, epoch_i=None, criterion=None, tb
         # compose predictions
         for idx, (meta, spans, score) in enumerate(zip(query_meta, pred_spans.cpu(), scores.cpu())):
             if opt.span_loss_type == "l1":
-                spans = span_cxw_to_xx(spans) * meta["duration"]
+                if opt.dataset == "qvhighlights":
+                    spans = span_cxw_to_xx(spans) * meta["duration"]
+                else:
+                    spans = span_cxw_to_xx(spans) * opt.max_v_l * opt.clip_length
+                
             # # (#queries, 3), [st(float), ed(float), score(float)]
             cur_ranked_preds = torch.cat([spans, score[:, None]], dim=1).tolist()
             if not opt.no_sort_results:
@@ -210,8 +212,6 @@ def setup_model(opt):
     logger.info("setup model/criterion/optimizer/scheduler")
     
     model = build_umt(opt)
-    # model = build_umt_v2(opt)
-    # model = build_umt_v3(opt)
     criterion = build_criterion(opt)
     
     if opt.device.type == "cuda":
@@ -246,6 +246,7 @@ def start_inference():
 
     assert opt.eval_path is not None
     eval_dataset = StartEndDataset(
+        dataset=opt.dataset,
         dset_name=opt.dset_name,
         data_path=opt.eval_path,
         v_feat_dirs=opt.v_feat_dirs,

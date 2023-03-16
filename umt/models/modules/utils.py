@@ -2,10 +2,9 @@ import copy
 
 import torch
 import torch.nn.functional as F
+from einops import einsum, rearrange, reduce, repeat
+from einops.layers.torch import Rearrange, Reduce
 from torch import nn
-
-from einops import rearrange, repeat, reduce, einsum
-from einops.layers.torch import Reduce, Rearrange
 
 
 def get_activation_fn(activation):

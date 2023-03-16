@@ -1,14 +1,13 @@
+import timm
 import torch
 import torch.nn.functional as F
+from einops import einsum, rearrange, reduce, repeat
+from timm.models.layers import trunc_normal_
 from torch import nn
 
-import timm
-from timm.models.layers import trunc_normal_
-
-from einops import rearrange, repeat, reduce, einsum
-
+from umt.models.modules.backbone import (UmtBackbone, UmtV2Backbone,
+                                         UmtV3Backbone)
 from umt.models.modules.input_ffn import InputFFN
-from umt.models.modules.backbone import UmtBackbone, UmtV2Backbone, UmtV3Backbone
 from umt.models.modules.predictor import UmtPredictor
 
 
