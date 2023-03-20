@@ -1,18 +1,25 @@
 import logging
 import os
 import pprint
+import sys
 import time
 from collections import OrderedDict, defaultdict
 
+import matplotlib.pyplot as plt
 import numpy as np
+import scipy
 import timm
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
+from scipy.interpolate import make_interp_spline
+from scipy.signal import savgol_filter
 from timm.optim import create_optimizer
 from timm.scheduler import create_scheduler
 from torch.utils.data import DataLoader
 from tqdm import tqdm, trange
+
+sys.path.append("/home/xuyifang/VGHD/Moment-DETR")
 
 from standalone_eval.eval import eval_submission
 from umt.config import TestOptions
@@ -49,7 +56,7 @@ def eval_epoch_post_processing(submission, opt, gt_data, save_submission_filenam
     submission_path = os.path.join(opt.results_dir, save_submission_filename)
     save_jsonl(submission, submission_path)
 
-    if opt.eval_split_name in ["val", "test"]:  # since test_public has no GT
+    if opt.eval_split_name in "val":  # since test_public has no GT
         
         metrics = eval_submission(
             submission, gt_data,
@@ -204,6 +211,69 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
     metrics, metrics_nms, latest_file_paths = \
                     eval_epoch_post_processing(submission, opt, eval_dataset.data, save_submission_filename)
     
+    # if visualize res, please set "opt.draw_res=True".
+    opt.draw_res = False
+    if opt.draw_res:
+        vis_dir = "/home/xuyifang/VGHD/Moment-DETR/visualization/"
+        if not os.path.exists(vis_dir):
+            os.makedirs(vis_dir) 
+        
+        qid_list = [
+            41, 239, 338, 587, 2277,
+        ]
+        stop = 20
+        pred_sub = 0.17
+                
+        for pred, data in tqdm(zip(submission, eval_dataset.data), desc="Save visualization results"):
+            qid = data["qid"]
+            if qid not in qid_list:
+                continue
+            
+            fig, ax = plt.subplots(figsize=(32, 2))
+
+            x = np.arange(0, 75, 1)
+            pred_hl, data_hl = np.zeros(75), np.zeros(75)
+            
+            pred_rel_hl = np.array(pred["pred_saliency_scores"])
+            data_rel_hl = np.sum(data["saliency_scores"], axis=1) / 12
+            
+            for idx, rel_idx in enumerate(data["relevant_clip_ids"]):
+                data_hl[rel_idx] = data_rel_hl[idx]
+                pred_hl[rel_idx] = pred_rel_hl[idx]
+            
+            pred_hl -= pred_sub
+            pred_hl = np.round(np.clip(pred_hl, 0, 1), 2)
+            data_hl = np.round(data_hl, 2)
+            
+            if stop >= 75:
+                ax.plot(x, data_hl, label='Ground Truth', linestyle='-', color='lightcoral', linewidth=3)
+                ax.plot(x, pred_hl, label='Prediction', linestyle='--', color='darkgreen', linewidth=3)
+            else:
+                ax.plot(x[:stop], data_hl[:stop], label='Saliency score', linestyle='-', color='lightcoral', linewidth=3)
+                # ax.plot(x[:stop], data_hl[:stop], label='Ground Truth', linestyle='-', color='lightcoral', linewidth=3)
+                # ax.plot(x[:stop], pred_hl[:stop], label='Prediction', linestyle='--', color='darkgreen', linewidth=3)
+
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            
+            ax.spines['bottom'].set_linewidth(3)
+            ax.spines['left'].set_linewidth(3)
+            
+            # ax.xaxis.set_ticks(np.arange(0, 76, 15))
+            # ax.yaxis.set_ticks(np.arange(0, 1.1, 0.5))
+            
+            ax.axis('off')
+            ax.tick_params(axis='both', length=0, width=0)
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
+            
+            ax.set_xmargin(0)
+        
+            ax.legend()
+            fig.savefig(f"{vis_dir}/{qid}.png", dpi=150)
+            plt.close()
+
+
     return metrics, metrics_nms, eval_loss_meters, latest_file_paths
 
 
@@ -260,14 +330,14 @@ def start_inference():
         normalize_t=not opt.no_norm_tfeat,
         clip_len=opt.clip_length,
         max_windows=opt.max_windows,
-        load_labels=True,  # opt.eval_split_name == "val",
+        load_labels=True if opt.eval_split_name == "val" else False,
         span_loss_type=opt.span_loss_type,
         txt_drop_ratio=0
     )
 
     model, criterion, _, _ = setup_model(opt)
     save_submission_filename = "inference_{}_{}_{}_preds.jsonl".format(
-        opt.dset_name, opt.eval_split_name, opt.eval_id)
+                                            opt.dset_name, opt.eval_split_name, opt.eval_id)
     logger.info("Starting inference...")
     t = time.time()
     
@@ -276,8 +346,10 @@ def start_inference():
             eval_epoch(model, eval_dataset, opt, save_submission_filename, criterion=criterion)
     
     logger.info(f"Inference cost: {(time.time() - t):.3f}s")
-    logger.info(f"Inference QPS: {round(1550 / (time.time() - t))}")   
-    logger.info("metrics_no_nms {}".format(pprint.pformat(metrics_no_nms["brief"], indent=4)))
+    logger.info(f"Inference QPS: {round(1550 / (time.time() - t))}") 
+    
+    if metrics_no_nms is not None:
+        logger.info("metrics_no_nms {}".format(pprint.pformat(metrics_no_nms["brief"], indent=4)))
     if metrics_nms is not None:
         logger.info("metrics_nms {}".format(pprint.pformat(metrics_nms["brief"], indent=4)))
 

@@ -24,20 +24,17 @@ class BaseOptions(object):
         self.initialized = True
         parser = argparse.ArgumentParser('Model training and evaluation script')
         
-        parser.add_argument("--train_batch_size", type=int, default=64, help="mini-batch size at training")
+        parser.add_argument("--train_batch_size", type=int, default=32, help="mini-batch size at training")
         parser.add_argument("--eval_batch_size", type=int, default=100, help="mini-batch size at inference, for query")
         parser.add_argument("--epochs", type=int, default=200, help="number of epochs to run")
         parser.add_argument("--eval_epoch_interval", type=int, default=5, help="number of interval eval at training")
         
         parser.add_argument("--dset_name", type=str, default="umt")
         parser.add_argument("--eval_split_name", type=str, default="val", 
-                            help="should match keys in video_duration_idx_path, must set for VG")
+                            help="should match keys in video_duration_idx_path, must set for MR")
+        parser.add_argument("--draw_res", action="store_true", help="Save visualization res for MR and HD")
         parser.add_argument("--debug", action="store_true",
                             help="debug (fast) mode, break all loops, do not load all data into memory.")
-        parser.add_argument("--data_ratio", type=float, default=1.0,
-                            help="how many training and eval data to use. 1.0: use all, 0.1: use 10%."
-                                 "Use small portion for debug purposes. Note this is different from --debug, "
-                                 "which works by breaking the loops, typically they are not used together.")
         parser.add_argument("--results_root", type=str, default="results")
         parser.add_argument("--exp_id", type=str, default="exp0", help="id of this run, required at training")
         parser.add_argument("--seed", type=int, default=2018, help="random seed")
@@ -50,6 +47,10 @@ class BaseOptions(object):
 
         # Dataset config
         parser.add_argument("--dataset", type=str, default="qvhighlights", choices=['qvhighlights', 'charades'])
+        parser.add_argument("--data_ratio", type=float, default=1.0,
+                    help="how many training and eval data to use. 1.0: use all, 0.1: use 10%."
+                            "Use small portion for debug purposes. Note this is different from --debug, "
+                            "which works by breaking the loops, typically they are not used together.")
         parser.add_argument("--max_v_l", type=int, default=75)
         parser.add_argument("--max_q_l", type=int, default=32)
         parser.add_argument("--clip_length", type=int, default=2)
@@ -90,7 +91,7 @@ class BaseOptions(object):
         # Learning rate schedule hyper-parameters
         parser.add_argument('--sched', type=str, default='step', metavar='SCHEDULER', choices=['cosine', 'step'], 
                             help='LR scheduler (default: "step")')
-        parser.add_argument("--lr", type=float, default=1e-4, help="learning rate")
+        parser.add_argument("--lr", type=float, default=2e-4, help="learning rate")
         parser.add_argument('--warmup-lr', type=float, default=5e-7, metavar='LR',
                         help='warmup learning rate (default: 5e-7)')
         parser.add_argument('--warmup-epochs', type=int, default=0, metavar='N',
@@ -184,10 +185,12 @@ class BaseOptions(object):
             # opt.model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", opt.model_dir)
             opt.model_dir = os.path.dirname(opt.resume)
             saved_options = load_json(os.path.join(opt.model_dir, self.saved_option_filename))
-            for arg in saved_options:  # use saved options to overwrite all BaseOptions args.
+            # use saved options to overwrite all BaseOptions args.
+            for arg in saved_options:  
                 if arg not in ["results_root", "num_workers", "nms_thd", "debug",  # "max_before_nms", "max_after_nms"
                                "max_pred_l", "min_pred_l",
-                               "resume", "resume_all", "no_sort_results"]:
+                               "resume", "resume_all", "no_sort_results", 
+                               "eval_split_name", "eval_path"]:
                     setattr(opt, arg, saved_options[arg])
             # opt.no_core_driver = True
             if opt.eval_results_dir is not None:

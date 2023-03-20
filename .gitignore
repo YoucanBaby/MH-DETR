@@ -12,6 +12,8 @@ xyf/
 data/
 run_on_video/
 .vscode/
+visualization/
+_visualization/
 
 test.py
 

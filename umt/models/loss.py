@@ -138,8 +138,8 @@ class UmtCriterion(nn.Module):
         span_giou_loss = 1 - torch.diag(generalized_temporal_iou(span_cxw_to_xx(src_spans), span_cxw_to_xx(tgt_spans)))
 
         losses = {}
-        losses['span_l1'] = span_l1_loss.mean()
-        losses['span_giou'] = span_giou_loss.mean()
+        losses['span_l1'] = span_l1_loss.mean() if self.weight_dict["span_l1"] > 0 else 0
+        losses['span_giou'] = span_giou_loss.mean() if self.weight_dict["span_giou"] > 0 else 0
         return losses
 
 

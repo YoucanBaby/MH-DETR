@@ -147,7 +147,7 @@ class CrossAttentionLayer(nn.Module):
         ) 
         self.norm_ffn = nn.LayerNorm(qkv_dim)
          
-    def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):            
+    def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):
         temp = self.dropout_ca(
             self.ca(
                 with_pos_embed(x, x_pos),
@@ -176,7 +176,7 @@ class SelfCrossAttentionLayer(nn.Module):
         
         self.ca_layer = CrossAttentionLayer(qkv_dim, num_heads, dropout, activation)
          
-    def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):
+    def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):    
         temp = self.dropout_sa(
             self.sa(
                 with_pos_embed(x, x_pos), 

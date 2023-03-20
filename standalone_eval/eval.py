@@ -1,11 +1,16 @@
-import numpy as np
-from collections import OrderedDict, defaultdict
-import json
-import time
 import copy
+import heapq
+import json
 import multiprocessing as mp
-from standalone_eval.utils import compute_average_precision_detection, \
-    compute_temporal_iou_batch_cross, compute_temporal_iou_batch_paired, load_jsonl, get_ap
+import time
+from collections import OrderedDict, defaultdict
+
+import numpy as np
+
+from standalone_eval.utils import (compute_average_precision_detection,
+                                   compute_temporal_iou_batch_cross,
+                                   compute_temporal_iou_batch_paired, get_ap,
+                                   load_jsonl)
 
 
 def compute_average_precision_detection_wrapper(
@@ -97,7 +102,7 @@ def compute_mr_r1(submission, ground_truth, iou_thds=np.linspace(0.5, 0.95, 10))
     iou_thd2recall_at_one = {}
     for thd in iou_thds:
         iou_thd2recall_at_one[str(thd)] = float(f"{np.mean(pred_gt_iou >= thd) * 100:.2f}")
-        
+    
     return iou_thd2recall_at_one
 
 
@@ -106,7 +111,7 @@ def compute_mr_r5(submission, ground_truth, iou_thds=np.linspace(0.5, 0.95, 10))
     iou_thds = [float(f"{e:.2f}") for e in iou_thds]
     pred_qid2window = {d["qid"]: 
                             [d["pred_relevant_windows"][i][:2] for i in range(5)] 
-                                                                    for d in submission}  # :2 rm scores
+                                                                    for d in submission}
 
     gt_qid2window = {}
     for d in ground_truth:
@@ -252,11 +257,18 @@ def compute_hl_ap(qid2preds, qid2gt_scores_binary, num_workers=8, chunksize=50):
     # it's the same if we first average across different annotations, then average across queries
     # since all queries have the same #annotations.
     mean_ap = float(f"{100 * np.mean(ap_scores):.2f}")
+    
+    
+    # max_idx = np.argmax(pred_gt_iou)
+    # n_largest = heapq.nlargest(3, range(len(pred_gt_iou)), pred_gt_iou.take)
+    # temp = pred_gt_iou[n_largest]
+    
     return mean_ap
 
 
 def compute_ap_from_tuple(input_tuple):
     idx, w_idx, y_true, y_predict = input_tuple
+    
     if len(y_true) < len(y_predict):
         # print(f"len(y_true) < len(y_predict) {len(y_true), len(y_predict)}")
         y_predict = y_predict[:len(y_true)]
@@ -267,6 +279,7 @@ def compute_ap_from_tuple(input_tuple):
         y_predict = _y_predict
 
     score = get_ap(y_true, y_predict)
+    
     return idx, w_idx, score
 
 
@@ -300,12 +313,17 @@ def eval_highlight(submission, ground_truth, verbose=True):
         qid2gt_scores_binary = {
             k: (v >= gt_saliency_score_min).astype(float)
             for k, v in qid2gt_scores_full_range.items()}  # scores in [0, 1]
+        
         hit_at_one = compute_hl_hit1(qid2preds, qid2gt_scores_binary)
+        
         mean_ap = compute_hl_ap(qid2preds, qid2gt_scores_binary)
+        
         highlight_det_metrics[f"HL-min-{score_name}"] = {"HL-mAP": mean_ap, "HL-Hit1": hit_at_one}
+        
         if verbose:
             print(f"Calculating highlight scores with min score {gt_saliency_score_min} ({score_name})")
             print(f"Time cost {time.time() - start_time:.2f} seconds")
+            
     return highlight_det_metrics
 
 
@@ -363,6 +381,8 @@ def eval_submission(submission, ground_truth, opt, verbose=True, match_number=Tr
                 "MR-full-mAP": moment_ret_scores["full"]["MR-mAP"]["average"],
                 "MR-full-mAP@0.5": moment_ret_scores["full"]["MR-mAP"]["0.5"],
                 "MR-full-mAP@0.75": moment_ret_scores["full"]["MR-mAP"]["0.75"],
+                "MR-full-R1@0.5": moment_ret_scores["full"]["MR-R1"]["0.5"],
+                "MR-full-R1@0.7": moment_ret_scores["full"]["MR-R1"]["0.7"],
                 "MR-short-mAP": moment_ret_scores["short"]["MR-mAP"]["average"],
                 "MR-middle-mAP": moment_ret_scores["middle"]["MR-mAP"]["average"],
                 "MR-long-mAP": moment_ret_scores["long"]["MR-mAP"]["average"],
@@ -388,8 +408,6 @@ def eval_submission(submission, ground_truth, opt, verbose=True, match_number=Tr
             "MR-full-mAP@0.75": moment_ret_scores["full"]["MR-mAP"]["0.75"],
             "MR-full-R1@0.5": moment_ret_scores["full"]["MR-R1"]["0.5"],
             "MR-full-R1@0.7": moment_ret_scores["full"]["MR-R1"]["0.7"],
-            "MR-full-R5@0.5": moment_ret_scores["full"]["MR-R5"]["0.5"],
-            "MR-full-R5@0.7": moment_ret_scores["full"]["MR-R5"]["0.7"],
         }
         eval_metrics_brief.update(
                 sorted([(k, v) for k, v in moment_ret_scores_brief.items()], key=lambda x: x[0]))
