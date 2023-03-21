@@ -221,7 +221,7 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
         qid_list = [
             41, 239, 338, 587, 2277,
         ]
-        stop = 20
+        stop = 15
         pred_sub = 0.17
                 
         for pred, data in tqdm(zip(submission, eval_dataset.data), desc="Save visualization results"):
@@ -229,7 +229,7 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
             if qid not in qid_list:
                 continue
             
-            fig, ax = plt.subplots(figsize=(32, 2))
+            fig, ax = plt.subplots(figsize=(24, 2))
 
             x = np.arange(0, 75, 1)
             pred_hl, data_hl = np.zeros(75), np.zeros(75)
@@ -249,7 +249,7 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
                 ax.plot(x, data_hl, label='Ground Truth', linestyle='-', color='lightcoral', linewidth=3)
                 ax.plot(x, pred_hl, label='Prediction', linestyle='--', color='darkgreen', linewidth=3)
             else:
-                ax.plot(x[:stop], data_hl[:stop], label='Saliency score', linestyle='-', color='lightcoral', linewidth=3)
+                ax.plot(x[:stop], data_hl[:stop], label='Saliency score', linestyle='-', color='lightcoral', linewidth=5)
                 # ax.plot(x[:stop], data_hl[:stop], label='Ground Truth', linestyle='-', color='lightcoral', linewidth=3)
                 # ax.plot(x[:stop], pred_hl[:stop], label='Prediction', linestyle='--', color='darkgreen', linewidth=3)
 
@@ -259,17 +259,20 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
             ax.spines['bottom'].set_linewidth(3)
             ax.spines['left'].set_linewidth(3)
             
-            # ax.xaxis.set_ticks(np.arange(0, 76, 15))
-            # ax.yaxis.set_ticks(np.arange(0, 1.1, 0.5))
+            ax.xaxis.set_ticks(np.arange(0, 76, 20))
+            ax.yaxis.set_ticks(np.arange(0, 1.1, 0.5))
             
-            ax.axis('off')
-            ax.tick_params(axis='both', length=0, width=0)
-            ax.set_xticklabels([])
-            ax.set_yticklabels([])
+            # ax.axis('off')            #axis不可见
+            # tick不可见
+            # ax.tick_params(axis='both', length=0, width=0)
+            # ax.set_xticklabels([])
+            # ax.set_yticklabels([])
             
             ax.set_xmargin(0)
         
-            ax.legend()
+            ax.legend(fontsize=24)
+            ax.legend().set_visible(False)      #label不可见
+            
             fig.savefig(f"{vis_dir}/{qid}.png", dpi=150)
             plt.close()
 
