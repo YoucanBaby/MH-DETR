@@ -190,6 +190,37 @@ class SelfCrossAttentionLayer(nn.Module):
         x = self.ca_layer(x, mem, x_pos, mem_pos, mem_mask)
         
         return x
+    
+    
+class SelfCrossAttentionWithAnchorLayer(nn.Module):
+    def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu"):
+        super().__init__()
+        
+        self.sa = nn.MultiheadAttention(qkv_dim, num_heads, dropout)
+        self.dropout_sa = nn.Dropout(dropout)
+        self.norm_sa = nn.LayerNorm(qkv_dim)
+        
+        self.ca_layer = CrossAttentionLayer(qkv_dim, num_heads, dropout, activation)
+         
+    def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):    
+        T = x
+        temp = self.dropout_sa(
+            self.sa(
+                with_pos_embed(x, x_pos), 
+                with_pos_embed(x, x_pos), 
+                value=x
+            )[0]
+        )
+        
+        x = x + temp
+        x = self.norm_sa(x)
+        
+        x = torch.cat((x,T),dim=2)
+        x = nn.AvgPool1d(kernel_size=2, stride=2)(x)
+        
+        x = self.ca_layer(x, mem, x_pos, mem_pos, mem_mask)
+        
+        return x
 
 
 class WeightedBCE(nn.Module):

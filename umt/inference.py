@@ -24,7 +24,7 @@ sys.path.append("/home/xuyifang/VGHD/Moment-DETR")
 from standalone_eval.eval import eval_submission
 from umt.config import TestOptions
 from umt.models.loss import build_criterion
-from umt.models.umt import build_umt, build_umt_v2, build_umt_v3
+from umt.models.umt import build_umt, build_umt_v2, build_umt_v3, build_umt_v4
 from umt.postprocessing import PostProcessor
 from umt.start_end_dataset import (StartEndDataset, prepare_batch_inputs,
                                    start_end_collate)
@@ -219,19 +219,21 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
             os.makedirs(vis_dir) 
         
         qid_list = [
-            41, 239, 338, 587, 2277,
+            12, 41, 239, 
+            338, 526, 538, 
+            587, 1389, 2277,
         ]
-        stop = 15
-        pred_sub = 0.17
+        stop = 40
+        pred_sub = 0
                 
         for pred, data in tqdm(zip(submission, eval_dataset.data), desc="Save visualization results"):
             qid = data["qid"]
-            if qid not in qid_list:
-                continue
+            # if qid not in qid_list:
+            #     continue
             
-            fig, ax = plt.subplots(figsize=(24, 2))
+            fig, ax = plt.subplots(figsize=(32, 2))
 
-            x = np.arange(0, 75, 1)
+            x = np.arange(0, 75, 1) * 2
             pred_hl, data_hl = np.zeros(75), np.zeros(75)
             
             pred_rel_hl = np.array(pred["pred_saliency_scores"])
@@ -249,9 +251,9 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
                 ax.plot(x, data_hl, label='Ground Truth', linestyle='-', color='lightcoral', linewidth=3)
                 ax.plot(x, pred_hl, label='Prediction', linestyle='--', color='darkgreen', linewidth=3)
             else:
-                ax.plot(x[:stop], data_hl[:stop], label='Saliency score', linestyle='-', color='lightcoral', linewidth=5)
-                # ax.plot(x[:stop], data_hl[:stop], label='Ground Truth', linestyle='-', color='lightcoral', linewidth=3)
-                # ax.plot(x[:stop], pred_hl[:stop], label='Prediction', linestyle='--', color='darkgreen', linewidth=3)
+                # ax.plot(x[:stop], data_hl[:stop], label='Saliency score', linestyle='-', color='lightcoral', linewidth=5)
+                ax.plot(x[:stop], data_hl[:stop], label='Ground Truth', linestyle='-', color='lightcoral', linewidth=5)
+                ax.plot(x[:stop], pred_hl[:stop], label='Prediction', linestyle='--', color='darkgreen', linewidth=5)
 
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
@@ -259,7 +261,7 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
             ax.spines['bottom'].set_linewidth(3)
             ax.spines['left'].set_linewidth(3)
             
-            ax.xaxis.set_ticks(np.arange(0, 76, 20))
+            ax.xaxis.set_ticks(np.arange(0, 76, 15))
             ax.yaxis.set_ticks(np.arange(0, 1.1, 0.5))
             
             # ax.axis('off')            #axis不可见
@@ -270,12 +272,13 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
             
             ax.set_xmargin(0)
         
-            ax.legend(fontsize=24)
-            ax.legend().set_visible(False)      #label不可见
+            ax.legend(fontsize=12)
+            fig.savefig(f"{vis_dir}/{qid}_label.png", dpi=150)
             
+            ax.legend().set_visible(False)      #label不可见
             fig.savefig(f"{vis_dir}/{qid}.png", dpi=150)
+            
             plt.close()
-
 
     return metrics, metrics_nms, eval_loss_meters, latest_file_paths
 
@@ -284,7 +287,8 @@ def setup_model(opt):
     """setup model/criterion/optimizer/scheduler and load checkpoints when needed"""
     logger.info("setup model/criterion/optimizer/scheduler")
     
-    model = build_umt(opt)
+    # model = build_umt(opt)
+    model = build_umt_v4(opt)
     criterion = build_criterion(opt)
     
     if opt.device.type == "cuda":

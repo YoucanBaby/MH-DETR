@@ -6,7 +6,7 @@ from timm.models.layers import trunc_normal_
 from torch import nn
 
 from umt.models.modules.backbone import (UmtBackbone, UmtV2Backbone,
-                                         UmtV3Backbone)
+                                         UmtV3Backbone, UmtV4Backbone)
 from umt.models.modules.input_ffn import InputFFN
 from umt.models.modules.predictor import UmtPredictor
 
@@ -93,3 +93,22 @@ def build_umt_v3(opt):
         opt.dropout,
     )
     return model
+
+
+def build_umt_v4(opt):
+    """Create model of UMT with anchor pos"""
+    umt_backbone = UmtV4Backbone(
+        opt.max_v_l, opt.max_q_l,
+        opt.qkv_dim, opt.num_heads, 
+        opt.num_vg_qry,
+        opt.dropout, opt.activation, 
+    )
+    model = UMT(
+        umt_backbone, 
+        opt.v_feat_dim, opt.t_feat_dim, 
+        opt.input_vid_ffn_dropout, opt.input_txt_ffn_dropout,
+        opt.qkv_dim, 
+        opt.dropout,
+    )
+    return model
+
