@@ -9,8 +9,7 @@ from einops import rearrange, repeat, reduce, einsum
 from umt.models.modules.position_encoding import build_position_encoding
 from umt.models.modules.encoder import Encoder
 from umt.models.modules.decoder import Decoder
-from umt.models.modules.utils import (SelfAttentionLayer, CrossAttentionLayer, SelfCrossAttentionLayer,
-                                      SelfAttentionWithPoolLayer, SelfCrossAttentionWithPoolLayer)
+from umt.models.modules.utils import (SelfAttentionLayer, CrossAttentionLayer, SelfCrossAttentionLayer, SelfCrossAttentionWithPoolLayer)
 
 
 class UmtBackbone(nn.Module):
