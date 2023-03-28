@@ -5,8 +5,7 @@ from einops import einsum, rearrange, reduce, repeat
 from timm.models.layers import trunc_normal_
 from torch import nn
 
-from umt.models.modules.backbone import (UmtBackbone, UmtV2Backbone,
-                                         UmtV3Backbone, UmtV4Backbone)
+from umt.models.modules.backbone import (UmtBackbone, UmtV4Backbone)
 from umt.models.modules.input_ffn import InputFFN
 from umt.models.modules.predictor import UmtPredictor
 
@@ -32,7 +31,10 @@ class UMT(nn.Module):
         vid, txt = self.input_ffn(vid, txt)         #[B, T, d], [B, N, d], [B, d], [B, d]
         
         vghd_qry, vg_qry = self.backbone(vid, txt, vid_mask, txt_mask)    #[B, T, d], [B, M, d]
-        outputs.update(dict(vghd_qry=vghd_qry, vg_qry=vg_qry))
+        outputs.update(dict(
+            vghd_qry=vghd_qry, 
+            vg_qry=vg_qry
+        ))
         
         outputs.update(
             self.predictor(vghd_qry, vg_qry)
@@ -44,42 +46,6 @@ class UMT(nn.Module):
 def build_umt(opt):
     """Create model of UMT"""
     umt_backbone = UmtBackbone(
-        opt.max_v_l, opt.max_q_l,
-        opt.qkv_dim, opt.num_heads, 
-        opt.num_vg_qry,
-        opt.dropout, opt.activation, 
-    )
-    model = UMT(
-        umt_backbone, 
-        opt.v_feat_dim, opt.t_feat_dim, 
-        opt.input_vid_ffn_dropout, opt.input_txt_ffn_dropout,
-        opt.qkv_dim, 
-        opt.dropout,
-    )
-    return model
-
-
-def build_umt_v2(opt):
-    """Create model of UMT"""
-    umt_backbone = UmtV2Backbone(
-        opt.max_v_l, opt.max_q_l,
-        opt.qkv_dim, opt.num_heads, 
-        opt.num_vg_qry,
-        opt.dropout, opt.activation, 
-    )
-    model = UMT(
-        umt_backbone, 
-        opt.v_feat_dim, opt.t_feat_dim, 
-        opt.input_vid_ffn_dropout, opt.input_txt_ffn_dropout,
-        opt.qkv_dim, 
-        opt.dropout,
-    )
-    return model
-
-
-def build_umt_v3(opt):
-    """Create model of UMT"""
-    umt_backbone = UmtV3Backbone(
         opt.max_v_l, opt.max_q_l,
         opt.qkv_dim, opt.num_heads, 
         opt.num_vg_qry,
@@ -111,4 +77,3 @@ def build_umt_v4(opt):
         opt.dropout,
     )
     return model
-

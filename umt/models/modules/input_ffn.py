@@ -14,16 +14,11 @@ class InputFFN(nn.Module):
         self.input_video_ffn = nn.Sequential(
             LinearLayer(v_feat_dim, qkv_dim, layer_norm=True, dropout=input_vid_ffn_dropout, relu=True),
             LinearLayer(qkv_dim, qkv_dim, layer_norm=True, dropout=input_vid_ffn_dropout, relu=True),
-            # nn.LayerNorm(qkv_dim),
         )
         self.input_text_ffn = nn.Sequential(
             LinearLayer(t_feat_dim, qkv_dim, layer_norm=True, dropout=input_txt_ffn_dropout, relu=True),
             LinearLayer(qkv_dim, qkv_dim, layer_norm=True, dropout=input_txt_ffn_dropout, relu=True),
-            # nn.LayerNorm(qkv_dim),
         )
-        
-        # self.vid_pool = nn.AdaptiveAvgPool1d(1)
-        # self.txt_pool = nn.AdaptiveAvgPool1d(1)
     
     def forward(self, vid, txt):
         """
@@ -41,8 +36,4 @@ class InputFFN(nn.Module):
         txt = self.input_text_ffn(txt)
         
         return vid, txt
-        
-        # vid_pool = self.vid_pool(vid.permute(0, 2, 1)).squeeze(-1)
-        # txt_pool = self.txt_pool(txt.permute(0, 2, 1)).squeeze(-1)
-        # return vid, txt, vid_pool, txt_pool
     

@@ -126,8 +126,7 @@ class BaseOptions(object):
         parser.add_argument('--span_l1', type=float, default=10, help="VG L1 weight for the matching cost and loss")
         parser.add_argument('--span_giou', type=float, default=1, help="VG gIoU weight for the matching cost and loss")
         parser.add_argument("--coarse_contrastive", type=float, default=0, help="loss weight of coarse-grained contrastive learning")
-        parser.add_argument("--vghd_vg_contrastive", type=float, default=0, help="loss weight of contrastive learning between vghd and vg")
-        parser.add_argument("--vid_txt_contrastive", type=float, default=0, help="loss weight of contrastive learning between vid and txt")
+        parser.add_argument("--vid_qry_contrastive", type=float, default=0, help="loss weight of contrastive learning between vid and qry")
         ## * Loss hyper-parameters
         parser.add_argument('--coef_eos', default=0.1, type=float, help="Relative classification coefficient of the no-object class")
         parser.add_argument("--temperature", type=float, default=0.07, help="temperature nce contrastive_align_loss, do not change")

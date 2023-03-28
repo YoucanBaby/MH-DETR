@@ -212,24 +212,22 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
                     eval_epoch_post_processing(submission, opt, eval_dataset.data, save_submission_filename)
     
     # if visualize res, please set "opt.draw_res=True".
-    opt.draw_res = False
+    opt.draw_res = True
     if opt.draw_res:
         vis_dir = "/home/xuyifang/VGHD/Moment-DETR/visualization/"
         if not os.path.exists(vis_dir):
             os.makedirs(vis_dir) 
         
         qid_list = [
-            12, 41, 239, 
-            338, 526, 538, 
-            587, 1389, 2277,
+            2916, 4590
         ]
-        stop = 40
-        pred_sub = 0
+        stop = 60 
+        pred_sub = 0.15
                 
         for pred, data in tqdm(zip(submission, eval_dataset.data), desc="Save visualization results"):
             qid = data["qid"]
-            # if qid not in qid_list:
-            #     continue
+            if qid not in qid_list:
+                continue
             
             fig, ax = plt.subplots(figsize=(32, 2))
 
@@ -247,38 +245,56 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
             pred_hl = np.round(np.clip(pred_hl, 0, 1), 2)
             data_hl = np.round(data_hl, 2)
             
-            if stop >= 75:
+            if stop > 75:
                 ax.plot(x, data_hl, label='Ground Truth', linestyle='-', color='lightcoral', linewidth=3)
                 ax.plot(x, pred_hl, label='Prediction', linestyle='--', color='darkgreen', linewidth=3)
             else:
-                # ax.plot(x[:stop], data_hl[:stop], label='Saliency score', linestyle='-', color='lightcoral', linewidth=5)
-                ax.plot(x[:stop], data_hl[:stop], label='Ground Truth', linestyle='-', color='lightcoral', linewidth=5)
-                ax.plot(x[:stop], pred_hl[:stop], label='Prediction', linestyle='--', color='darkgreen', linewidth=5)
-
+                ax.plot(x[:stop], data_hl[:stop], label='Ground Truth (Query1)', linestyle='-', color='lightcoral', linewidth=5)
+                ax.plot(x[:stop], pred_hl[:stop], label='Prediction (Query1)', linestyle='--', color='forestgreen', linewidth=5)
+                
+                # ax.plot(x[:stop], data_hl[:stop], label='Ground Truth (Query2)', linestyle='-', color='palevioletred', linewidth=5)
+                # ax.plot(x[:stop], pred_hl[:stop], label='Prediction (Query2)', linestyle='--', color='teal', linewidth=5)
+                
+                
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
             
             ax.spines['bottom'].set_linewidth(3)
             ax.spines['left'].set_linewidth(3)
             
-            ax.xaxis.set_ticks(np.arange(0, 76, 15))
+            ax.xaxis.set_ticks(np.arange(0, 150, 30))
             ax.yaxis.set_ticks(np.arange(0, 1.1, 0.5))
-            
-            # ax.axis('off')            #axis不可见
-            # tick不可见
-            # ax.tick_params(axis='both', length=0, width=0)
-            # ax.set_xticklabels([])
-            # ax.set_yticklabels([])
             
             ax.set_xmargin(0)
         
-            ax.legend(fontsize=12)
+            ax.legend(fontsize=18)
             fig.savefig(f"{vis_dir}/{qid}_label.png", dpi=150)
             
-            ax.legend().set_visible(False)      #label不可见
-            fig.savefig(f"{vis_dir}/{qid}.png", dpi=150)
+            # ax.legend().set_visible(False)      #label不可见
+            # fig.savefig(f"{vis_dir}/{qid}.png", dpi=150)
             
             plt.close()
+
+    
+    # 获得一个vid下的多个qid
+    if 0:
+        vid_dict = {}
+        res_dict = {}
+        
+        for data in tqdm(eval_dataset.data):
+            qid = data["qid"]
+            vid = data["vid"]
+            
+            if vid not in vid_dict:
+                vid_dict[vid] = set()
+            vid_dict[vid].add(qid)
+            
+            if len(vid_dict[vid]) >= 2:
+                res_dict[vid] = vid_dict[vid]
+        
+        for item in res_dict.items():
+            print(item)
+        
 
     return metrics, metrics_nms, eval_loss_meters, latest_file_paths
 

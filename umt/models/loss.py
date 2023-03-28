@@ -30,7 +30,7 @@ class UmtCriterion(nn.Module):
         self.register_buffer('empty_weight', empty_weight)
         
         self.temperature = temperature
-    
+
     
     def get_saliency_loss(self, outputs, targets, indices=None):
         saliency_loss = {}
@@ -146,7 +146,7 @@ class UmtCriterion(nn.Module):
     def get_contrastive_loss(self, outputs, targets, indices=None):
         contrastive_loss = {}
         contrastive_loss.update(self._get_coarse_contrastive_loss(outputs, targets, indices))
-        contrastive_loss.update(self._get_vghd_vg_contrastive_loss(outputs, targets, indices))
+        contrastive_loss.update(self._get_vid_qry_contrastive_loss(outputs, targets, indices))
         return contrastive_loss
     
     def _get_coarse_contrastive_loss(self, outputs, targets, indices=None):
@@ -170,19 +170,19 @@ class UmtCriterion(nn.Module):
         loss =  (vid_loss + txt_loss) / 2.0     #torch.shape(B)
         
         return {"coarse_contrastive": loss.mean()}
-
-    def _get_vghd_vg_contrastive_loss(self, outputs, targets, indices, log=True):
-        """encourage higher scores between matched vghd_qry and input vg_qry"""
+    
+    def _get_vid_qry_contrastive_loss(self, outputs, targets, indices, log=True):
+        """encourage higher scores between matched vid and qry"""
         
-        if "vghd_vg_contrastive" not in self.weight_dict or self.weight_dict["vghd_vg_contrastive"] == 0:
-            return {"vghd_vg_contrastive": 0}
+        if "vid_qry_contrastive" not in self.weight_dict or self.weight_dict["vid_qry_contrastive"] == 0:
+            return {"vid_qry_contrastive": 0}
         
-        normalized_vghd_embed = outputs["vghd_qry"]     #(B, T, d)
-        normalized_vg_embed = outputs["vg_qry"]         #(B, M, d)
+        vid = outputs["vid_before_dec"]             #(B, T, d)
+        qry = outputs["qry_before_dec"]             #(B, T, d)
         
         logits = torch.einsum(
-            "bmd,btd->bmt", normalized_vg_embed, normalized_vghd_embed)     #(B, M, T)
-        logits = logits.sum(2) / self.temperature                           #(B, M)
+            "bmd,btd->bmt", qry, vid)               #(B, T, T)
+        logits = logits.sum(2) / self.temperature   #(B, T)
         
         idx = self._get_src_permutation_idx(indices)
         positive_map = torch.zeros_like(logits, dtype=torch.bool)
@@ -195,7 +195,29 @@ class UmtCriterion(nn.Module):
         
         loss = - pos_term / num_pos + neg_term      #(B, )
         
-        return {"vghd_vg_contrastive": loss.mean()}
+        return {"vid_qry_contrastive": loss.mean()}
+    
+    def __get_vid_qry_contrastive_loss(self, outputs, targets, indices=None):
+        if "vid_qry_contrastive" not in self.weight_dict or self.weight_dict["vid_qry_contrastive"] == 0:
+            return {"vid_qry_contrastive": 0}
+        
+        log_softmax = nn.LogSoftmax(dim=-1)
+        vid, qry = outputs["vid_pool"], outputs["qry_pool"]     #[B, d], [B, d]
+
+        logits = (qry @ vid.T) / self.temperature
+        
+        vid_similarity = vid @ vid.T
+        qry_similarity = qry @ qry.T
+        targets = F.softmax(
+            (vid_similarity + qry_similarity) / 2 * self.temperature, dim=-1
+        )
+        
+        vid_loss = (-targets.T * log_softmax(logits.T)).sum(1)
+        qry_loss = (-targets * log_softmax(logits)).sum(1)
+        
+        loss =  (vid_loss + qry_loss) / 2.0     #torch.shape(B)
+        
+        return {"vid_qry_contrastive": loss.mean()}
     
     def _get_src_permutation_idx(self, indices):
         # permute predictions following indices
@@ -238,7 +260,7 @@ def build_criterion(opt):
                     "span_l1": opt.span_l1,
                     "span_giou": opt.span_giou,
                     "coarse_contrastive": opt.coarse_contrastive,
-                    "vghd_vg_contrastive": opt.vghd_vg_contrastive,
+                    "vid_qry_contrastive": opt.vid_qry_contrastive,
                 }
     
     criterion = UmtCriterion(

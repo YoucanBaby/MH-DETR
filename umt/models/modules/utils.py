@@ -128,7 +128,7 @@ class SelfAttentionLayer(nn.Module):
         x = self.norm_ffn(x)
         
         return x
-    
+   
     
 class CrossAttentionLayer(nn.Module):
     def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu"):
@@ -192,7 +192,7 @@ class SelfCrossAttentionLayer(nn.Module):
         return x
     
     
-class SelfCrossAttentionWithAnchorLayer(nn.Module):
+class SelfCrossAttentionWithPoolLayer(nn.Module):
     def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu"):
         super().__init__()
         
