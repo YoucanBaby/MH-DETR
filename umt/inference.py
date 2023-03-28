@@ -24,7 +24,7 @@ sys.path.append("/home/xuyifang/VGHD/Moment-DETR")
 from standalone_eval.eval import eval_submission
 from umt.config import TestOptions
 from umt.models.loss import build_criterion
-from umt.models.umt import build_umt, build_umt_v2, build_umt_v3, build_umt_v4
+from umt.models.umt import build_umt, build_umt_v4
 from umt.postprocessing import PostProcessor
 from umt.start_end_dataset import (StartEndDataset, prepare_batch_inputs,
                                    start_end_collate)
