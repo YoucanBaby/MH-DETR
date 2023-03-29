@@ -212,7 +212,7 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
                     eval_epoch_post_processing(submission, opt, eval_dataset.data, save_submission_filename)
     
     # if visualize res, please set "opt.draw_res=True".
-    opt.draw_res = True
+    opt.draw_res = False
     if opt.draw_res:
         vis_dir = "/home/xuyifang/VGHD/Moment-DETR/visualization/"
         if not os.path.exists(vis_dir):
@@ -275,7 +275,7 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
             
             plt.close()
 
-    
+
     # 获得一个vid下的多个qid
     if 0:
         vid_dict = {}
