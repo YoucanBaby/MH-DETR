@@ -10,6 +10,7 @@ class Decoder(nn.Module):
         self.layers = get_clones(layer, depth)
         
     def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):
+        res = []
         if isinstance(self.layers[0], nn.MultiheadAttention):
             for layer in self.layers:
                 x = layer(
@@ -21,4 +22,5 @@ class Decoder(nn.Module):
         else:
             for layer in self.layers:
                 x = layer(x, mem, x_pos, mem_pos, mem_mask)
-        return x
+                res.append(x)
+        return res

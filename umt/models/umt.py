@@ -5,7 +5,7 @@ from einops import einsum, rearrange, reduce, repeat
 from timm.models.layers import trunc_normal_
 from torch import nn
 
-from umt.models.modules.backbone import (UmtBackbone, UmtV4Backbone)
+from umt.models.modules.backbone import (UmtBackbone, UmtV2Backbone)
 from umt.models.modules.input_ffn import InputFFN
 from umt.models.modules.predictor import UmtPredictor
 
@@ -61,9 +61,8 @@ def build_umt(opt):
     return model
 
 
-def build_umt_v4(opt):
-    """Create model of UMT with anchor pos"""
-    umt_backbone = UmtV4Backbone(
+def build_umt_v2(opt):
+    umt_backbone = UmtV2Backbone(
         opt.max_v_l, opt.max_q_l,
         opt.qkv_dim, opt.num_heads, 
         opt.num_vg_qry,

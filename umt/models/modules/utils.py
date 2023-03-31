@@ -42,6 +42,16 @@ def get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
 
 
+class Pooling(nn.Module):
+    def __init__(self, pool_size=3):
+        super().__init__()
+        self.pool = nn.AvgPool1d(
+            pool_size, stride=1, padding=pool_size//2, count_include_pad=False)
+
+    def forward(self, x):
+        return self.pool(x)
+
+
 class FFN(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, activation='relu', dropout=0.1, num_layers=2):
         super().__init__()
@@ -129,7 +139,7 @@ class SelfAttentionLayer(nn.Module):
         
         return x
    
-    
+   
 class CrossAttentionLayer(nn.Module):
     def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu"):
         super().__init__()
@@ -190,8 +200,8 @@ class SelfCrossAttentionLayer(nn.Module):
         x = self.ca_layer(x, mem, x_pos, mem_pos, mem_mask)
         
         return x
-    
-    
+
+
 class SelfCrossAttentionWithPoolLayer(nn.Module):
     def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu"):
         super().__init__()
@@ -203,7 +213,8 @@ class SelfCrossAttentionWithPoolLayer(nn.Module):
         self.ca_layer = CrossAttentionLayer(qkv_dim, num_heads, dropout, activation)
          
     def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):    
-        T = x
+        x_before_sa = x
+        
         temp = self.dropout_sa(
             self.sa(
                 with_pos_embed(x, x_pos), 
@@ -211,12 +222,61 @@ class SelfCrossAttentionWithPoolLayer(nn.Module):
                 value=x
             )[0]
         )
-        
         x = x + temp
         x = self.norm_sa(x)
         
-        x = torch.cat((x,T),dim=2)
+        x = torch.cat((x, x_before_sa),dim=2)
         x = nn.AvgPool1d(kernel_size=2, stride=2)(x)
+        
+        x = self.ca_layer(x, mem, x_pos, mem_pos, mem_mask)
+        
+        return x
+
+
+class SelfPoolingLayer(nn.Module):
+    
+    def __init__(self, qkv_dim=256, pool_size=3, dropout=0.1, activation="relu"):
+        super().__init__()
+        
+        self.pool = Pooling(pool_size)
+        self.norm = nn.LayerNorm(qkv_dim)
+
+        self.ffn = nn.Sequential(
+            nn.Linear(qkv_dim, qkv_dim*4),
+            get_activation_fn(activation),
+            nn.Dropout(dropout),
+            nn.Linear(qkv_dim*4, qkv_dim),
+            nn.Dropout(dropout),
+        )
+        self.norm_ffn = nn.LayerNorm(qkv_dim)
+         
+    def forward(self, x, pos=None, mask=None):
+        x = rearrange(x, "T B d -> B d T")
+        temp = self.pool(x)
+        x = x + temp
+        x = rearrange(x, "B d T -> T B d")
+        x = self.norm(x)
+        
+        temp = self.ffn(x)
+        x = x + temp
+        x = self.norm_ffn(x)
+        
+        return x
+
+
+class SelfPoolingCrossAttentionLayer(nn.Module):
+    def __init__(self, qkv_dim=256, num_heads=8, pool_size=3, dropout=0.1, activation="relu"):
+        super().__init__()
+        
+        self.pool = Pooling(pool_size)
+        self.norm = nn.LayerNorm(qkv_dim)
+        
+        self.ca_layer = CrossAttentionLayer(qkv_dim, num_heads, dropout, activation)
+         
+    def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):    
+        temp = self.pool(x)
+        x = x + temp
+        x = self.norm(x)
         
         x = self.ca_layer(x, mem, x_pos, mem_pos, mem_mask)
         

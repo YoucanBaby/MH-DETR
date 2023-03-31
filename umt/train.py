@@ -12,6 +12,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from fvcore.nn import FlopCountAnalysis, flop_count, flop_count_str
+from nncore.engine import generate_random_seed
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm, trange
@@ -32,6 +33,7 @@ logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s - %(m
 
 
 def set_seed(seed, use_cuda=True):
+    logger.info(f'Using seed: {seed}')
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)

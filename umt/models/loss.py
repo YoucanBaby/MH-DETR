@@ -126,7 +126,7 @@ class UmtCriterion(nn.Module):
         The target spans are expected in format (center_x, w), normalized by the image size.
         """
         
-        if self.weight_dict["span_l1"] == 0 and self.weight_dict["span_giou"] == 0:
+        if self.weight_dict["span_l1"] == 0 or self.weight_dict["span_giou"] == 0:
             return {"span_l1": 0, "span_giou": 0}
         
         targets = targets["span_labels"]
