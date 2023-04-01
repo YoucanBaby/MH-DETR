@@ -181,7 +181,7 @@ class CrossAttentionLayer(nn.Module):
 
 
 class SelfCrossAttentionLayer(nn.Module):
-    def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu"):
+    def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu", drop_path=0.):
         super().__init__()
         
         self.sa = nn.MultiheadAttention(qkv_dim, num_heads, dropout)
@@ -189,6 +189,9 @@ class SelfCrossAttentionLayer(nn.Module):
         self.norm_sa = nn.LayerNorm(qkv_dim)
         
         self.ca_layer = CrossAttentionLayer(qkv_dim, num_heads, dropout, activation)
+        
+        self.drop_path = DropPath(drop_path) if drop_path > 0. \
+            else nn.Identity()
          
     def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):    
         temp = self.dropout_sa(
@@ -198,7 +201,7 @@ class SelfCrossAttentionLayer(nn.Module):
                 value=x
             )[0]
         )
-        x = x + temp
+        x = x + self.drop_path(temp)
         x = self.norm_sa(x)
         
         x = self.ca_layer(x, mem, x_pos, mem_pos, mem_mask)
@@ -207,7 +210,7 @@ class SelfCrossAttentionLayer(nn.Module):
 
 
 class SelfCrossAttentionWithPoolLayer(nn.Module):
-    def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu"):
+    def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu", drop_path=0.):
         super().__init__()
         
         self.sa = nn.MultiheadAttention(qkv_dim, num_heads, dropout)
@@ -215,6 +218,9 @@ class SelfCrossAttentionWithPoolLayer(nn.Module):
         self.norm_sa = nn.LayerNorm(qkv_dim)
         
         self.ca_layer = CrossAttentionLayer(qkv_dim, num_heads, dropout, activation)
+        
+        self.drop_path = DropPath(drop_path) if drop_path > 0. \
+            else nn.Identity()
          
     def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):    
         x_before_sa = x
@@ -226,13 +232,92 @@ class SelfCrossAttentionWithPoolLayer(nn.Module):
                 value=x
             )[0]
         )
-        x = x + temp
+        x = x + self.drop_path(temp)
         x = self.norm_sa(x)
         
         x = torch.cat((x, x_before_sa),dim=2)
         x = nn.AvgPool1d(kernel_size=2, stride=2)(x)
         
         x = self.ca_layer(x, mem, x_pos, mem_pos, mem_mask)
+        
+        return x
+
+
+class SelfCrossAttentionLayerScale(nn.Module):
+    def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu", drop_path=0., 
+                                                use_layer_scale=False, layer_scale_init_value=1e-5):
+        super().__init__()
+        
+        # self-attention
+        self.sa = nn.MultiheadAttention(qkv_dim, num_heads, dropout)
+        self.dropout_sa = nn.Dropout(dropout)
+        self.norm_sa = nn.LayerNorm(qkv_dim)
+        
+        # cross-attention
+        self.ca = nn.MultiheadAttention(qkv_dim, num_heads, dropout)
+        self.dropout_ca = nn.Dropout(dropout)
+        self.norm_ca = nn.LayerNorm(qkv_dim)
+
+        # ffn
+        self.ffn = nn.Sequential(
+            nn.Linear(qkv_dim, qkv_dim*4),
+            get_activation_fn(activation),
+            nn.Dropout(dropout),
+            nn.Linear(qkv_dim*4, qkv_dim),
+            nn.Dropout(dropout),
+        ) 
+        self.norm_ffn = nn.LayerNorm(qkv_dim)
+        
+        # drop_path
+        self.drop_path = DropPath(drop_path) if drop_path > 0. \
+            else nn.Identity()
+        
+        # layer_scale
+        self.use_layer_scale = use_layer_scale
+        if use_layer_scale:
+            self.layer_scale_sa = nn.Parameter(
+                    layer_scale_init_value * torch.ones((1, 1, qkv_dim)))
+            self.layer_scale_ca = nn.Parameter(
+                    layer_scale_init_value * torch.ones((1, 1, qkv_dim)))
+            self.layer_scale_ffn = nn.Parameter(
+                    layer_scale_init_value * torch.ones((1, 1, qkv_dim)))
+         
+    def forward(self, x, mem, x_pos=None, mem_pos=None, mem_mask=None):    
+        # self-attention
+        x_before_sa = x    
+        
+        temp = self.dropout_sa(
+            self.sa(
+                with_pos_embed(x, x_pos), 
+                with_pos_embed(x, x_pos), 
+                value=x
+            )[0]
+        )
+        temp = self.layer_scale_sa * temp if self.use_layer_scale else temp
+        x = x + self.drop_path(temp)
+        x = self.norm_sa(x)
+        
+        x = torch.cat((x, x_before_sa),dim=2)
+        x = nn.AvgPool1d(kernel_size=2, stride=2)(x)
+        
+        # cross-attention
+        temp = self.dropout_ca(
+            self.ca(
+                with_pos_embed(x, x_pos),
+                with_pos_embed(mem, mem_pos),
+                value=mem,
+                key_padding_mask=mem_mask
+            )[0]
+        )
+        temp = self.layer_scale_ca * temp if self.use_layer_scale else temp
+        x = x + self.drop_path(temp)
+        x = self.norm_ca(x)
+        
+        # ffn
+        temp = self.ffn(x)
+        temp = self.layer_scale_ffn * temp if self.use_layer_scale else temp
+        x = x + self.drop_path(temp)
+        x = self.norm_ffn(x)
         
         return x
 

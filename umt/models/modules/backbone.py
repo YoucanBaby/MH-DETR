@@ -10,7 +10,7 @@ from umt.models.modules.position_encoding import build_position_encoding
 from umt.models.modules.encoder import Encoder
 from umt.models.modules.decoder import Decoder
 from umt.models.modules.utils import (SelfAttentionLayer, CrossAttentionLayer, 
-                                      SelfCrossAttentionLayer, SelfCrossAttentionWithPoolLayer,
+                                      SelfCrossAttentionLayer, SelfCrossAttentionWithPoolLayer, SelfCrossAttentionLayerScale, 
                                       SelfPoolingLayer, SelfPoolingCrossAttentionLayer)
 
 
@@ -41,6 +41,7 @@ class UmtBackbone(nn.Module):
         
         # VG Decoder
         vg_dec_layer = SelfCrossAttentionWithPoolLayer(qkv_dim, num_heads, dropout, activation)
+        # vg_dec_layer = SelfCrossAttentionLayerScale(qkv_dim, num_heads, dropout, activation, drop_path)
         self.vg_dec = Decoder(vg_dec_layer, depth=4)
         
         # Query
