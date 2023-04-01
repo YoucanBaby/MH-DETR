@@ -4,6 +4,7 @@ import torch
 import torch.nn.functional as F
 from einops import einsum, rearrange, reduce, repeat
 from einops.layers.torch import Rearrange, Reduce
+from timm.models.layers import DropPath
 from torch import nn
 
 
@@ -96,7 +97,7 @@ class LinearLayer(nn.Module):
 
 class SelfAttentionLayer(nn.Module):
     
-    def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu"):
+    def __init__(self, qkv_dim=256, num_heads=8, dropout=0.1, activation="relu", drop_path=0.):
         super().__init__()
         
         self.sa = nn.MultiheadAttention(qkv_dim, num_heads, dropout)
@@ -111,6 +112,9 @@ class SelfAttentionLayer(nn.Module):
             nn.Dropout(dropout),
         )
         self.norm_ffn = nn.LayerNorm(qkv_dim)
+        
+        self.drop_path = DropPath(drop_path) if drop_path > 0. \
+            else nn.Identity()
          
     def forward(self, x, pos=None, mask=None):
         """Multi-head Self-Attention Layer
@@ -130,11 +134,11 @@ class SelfAttentionLayer(nn.Module):
                 key_padding_mask=mask
             )[0]
         )
-        x = x + temp
+        x = x + self.drop_path(temp)
         x = self.norm_sa(x)
         
         temp = self.ffn(x)
-        x = x + temp
+        x = x + self.drop_path(temp)
         x = self.norm_ffn(x)
         
         return x
@@ -235,7 +239,7 @@ class SelfCrossAttentionWithPoolLayer(nn.Module):
 
 class SelfPoolingLayer(nn.Module):
     
-    def __init__(self, qkv_dim=256, pool_size=3, dropout=0.1, activation="relu"):
+    def __init__(self, qkv_dim=256, pool_size=3, dropout=0.1, activation="relu", drop_path=0.):
         super().__init__()
         
         self.pool = Pooling(pool_size)
@@ -249,16 +253,19 @@ class SelfPoolingLayer(nn.Module):
             nn.Dropout(dropout),
         )
         self.norm_ffn = nn.LayerNorm(qkv_dim)
+        
+        self.drop_path = DropPath(drop_path) if drop_path > 0. \
+            else nn.Identity()
          
     def forward(self, x, pos=None, mask=None):
         x = rearrange(x, "T B d -> B d T")
         temp = self.pool(x)
-        x = x + temp
+        x = x + self.drop_path(temp)
         x = rearrange(x, "B d T -> T B d")
         x = self.norm(x)
         
         temp = self.ffn(x)
-        x = x + temp
+        x = x + self.drop_path(temp)
         x = self.norm_ffn(x)
         
         return x

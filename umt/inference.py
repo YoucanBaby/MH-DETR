@@ -24,7 +24,7 @@ sys.path.append("/home/xuyifang/VGHD/Moment-DETR")
 from standalone_eval.eval import eval_submission
 from umt.config import TestOptions
 from umt.models.loss import build_criterion
-from umt.models.umt import build_umt, build_umt_v2
+from umt.models.umt import build_umt
 from umt.postprocessing import PostProcessor
 from umt.start_end_dataset import (StartEndDataset, prepare_batch_inputs,
                                    start_end_collate)
@@ -303,8 +303,7 @@ def setup_model(opt):
     """setup model/criterion/optimizer/scheduler and load checkpoints when needed"""
     logger.info("setup model/criterion/optimizer/scheduler")
     
-    # model = build_umt(opt)
-    model = build_umt_v2(opt)
+    model = build_umt(opt)
     criterion = build_criterion(opt)
     
     if opt.device.type == "cuda":

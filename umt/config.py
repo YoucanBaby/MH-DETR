@@ -68,7 +68,7 @@ class BaseOptions(object):
         parser.add_argument("--v_feat_dim", type=int, default=2816, help="video feature dim")
         parser.add_argument("--t_feat_dim", type=int, default=512, help="text/query feature dim")
         parser.add_argument("--ctx_mode", type=str, default="video_tef", help="use video feat and text feat")
-        parser.add_argument("--text_drop_ratio", default=0, type=float, help="drop text_drop_ratio tokens from text input. 0.1=10%")  
+        parser.add_argument("--text_drop_ratio", type=float, default=0, help="drop text_drop_ratio tokens from text input. 0.1=10%")  
         
         # Training config
         parser.add_argument("--max_es_cnt", type=int, default=200,
@@ -106,17 +106,17 @@ class BaseOptions(object):
                             help='LR decay rate (default: 0.1)')
 
         # Model config
-        parser.add_argument('--activation', default="relu", choices=["relu", "gelu", "glu"], type=str, help="Activation function of the model")
+        parser.add_argument('--activation', type=str, default="relu", choices=["relu", "gelu", "glu"], help="Activation function of the model")
         ## * Input FNN 
-        parser.add_argument("--num_input_ffn_layers", default=2, type=int, help="#layers to encoder input")
-        parser.add_argument('--input_vid_ffn_dropout', default=0.5, type=float, help="Dropout applied in input video ffn")
-        parser.add_argument('--input_txt_ffn_dropout', default=0.3, type=float, help="Dropout applied in input text ffn")
+        parser.add_argument("--num_input_ffn_layers", type=int, default=2, help="#layers to encoder input")
+        parser.add_argument('--input_vid_ffn_dropout', type=float, default=0.5, help="Dropout applied in input video ffn")
+        parser.add_argument('--input_txt_ffn_dropout', type=float, default=0.3, help="Dropout applied in input text ffn")
         ## * Transformer
-        parser.add_argument('--qkv_dim', default=256, type=int, help="Dimension of the transformer")
-        parser.add_argument('--num_heads', default=8, type=int, help="Number of attention heads inside the transformer's attentions")
-        parser.add_argument('--num_vg_qry', default=10, type=int, help="Number of video grounding queries")
-        parser.add_argument('--dropout', default=0.1, type=float, help="Dropout applied in the transformer and output ffn")
-        
+        parser.add_argument('--qkv_dim', type=int, default=256, help="Dimension of the transformer")
+        parser.add_argument('--num_heads', type=int, default=8, help="Number of attention heads inside the transformer's attentions")
+        parser.add_argument('--num_vg_qry', type=int, default=10, help="Number of video grounding queries")
+        parser.add_argument('--dropout', type=float, default=0.1, help="Dropout applied in the transformer and output ffn")
+        parser.add_argument('--drop_path', type=float, default=0.1, help='Drop path rate (default: 0.1)')
         
         # * Loss weight
         parser.add_argument("--saliency_bce", type=float, default=1, help="weight for saliency loss, set to 0 will ignore")
@@ -128,7 +128,7 @@ class BaseOptions(object):
         parser.add_argument("--coarse_contrastive", type=float, default=0, help="loss weight of coarse-grained contrastive learning")
         parser.add_argument("--vid_qry_contrastive", type=float, default=0, help="loss weight of contrastive learning between vid and qry")
         ## * Loss hyper-parameters
-        parser.add_argument('--coef_eos', default=0.1, type=float, help="Relative classification coefficient of the no-object class")
+        parser.add_argument('--coef_eos', type=float, default=0.1, help="Relative classification coefficient of the no-object class")
         parser.add_argument("--temperature", type=float, default=0.07, help="temperature nce contrastive_align_loss, do not change")
         
         

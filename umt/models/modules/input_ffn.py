@@ -14,10 +14,12 @@ class InputFFN(nn.Module):
         self.input_video_ffn = nn.Sequential(
             LinearLayer(v_feat_dim, qkv_dim, layer_norm=True, dropout=input_vid_ffn_dropout, relu=True),
             LinearLayer(qkv_dim, qkv_dim, layer_norm=True, dropout=input_vid_ffn_dropout, relu=True),
+            # nn.LayerNorm(qkv_dim),
         )
         self.input_text_ffn = nn.Sequential(
             LinearLayer(t_feat_dim, qkv_dim, layer_norm=True, dropout=input_txt_ffn_dropout, relu=True),
             LinearLayer(qkv_dim, qkv_dim, layer_norm=True, dropout=input_txt_ffn_dropout, relu=True),
+            # nn.LayerNorm(qkv_dim),
         )
     
     def forward(self, vid, txt):
