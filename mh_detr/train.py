@@ -17,11 +17,11 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm, trange
 
-sys.path.append("/home/xuyifang/VGHD/Moment-DETR")
+sys.path.append("/home/xuyifang/VGHD/MH-DETR")
 
-from umt.config import BaseOptions
-from umt.inference import eval_epoch, setup_model, start_inference
-from umt.start_end_dataset import (StartEndDataset, prepare_batch_inputs,
+from mh_detr.config import BaseOptions
+from mh_detr.inference import eval_epoch, setup_model, start_inference
+from mh_detr.start_end_dataset import (StartEndDataset, prepare_batch_inputs,
                                    start_end_collate)
 from utils.basic_utils import AverageMeter, dict_to_markdown
 from utils.model_utils import count_parameters

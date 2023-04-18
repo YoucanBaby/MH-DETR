@@ -1,5 +1,5 @@
 # training
-PYTHONPATH=$PYTHONPATH:. python umt/train.py \
+PYTHONPATH=$PYTHONPATH:. python mh_detr/train.py \
 --dset_name charades-utr-cheat_0.05 \
 --dataset charades \
 --train_path data/charades/train_val_0.05.pkl \

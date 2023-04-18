@@ -19,14 +19,14 @@ from timm.scheduler import create_scheduler
 from torch.utils.data import DataLoader
 from tqdm import tqdm, trange
 
-sys.path.append("/home/xuyifang/VGHD/Moment-DETR")
+sys.path.append("/home/xuyifang/VGHD/MH-DETR")
 
 from standalone_eval.eval import eval_submission
-from umt.config import TestOptions
-from umt.models.loss import build_criterion
-from umt.models.umt import build_umt
-from umt.postprocessing import PostProcessor
-from umt.start_end_dataset import (StartEndDataset, prepare_batch_inputs,
+from mh_detr.config import TestOptions
+from mh_detr.models.loss import build_criterion
+from mh_detr.models.model import build_model
+from mh_detr.postprocessing import PostProcessor
+from mh_detr.start_end_dataset import (StartEndDataset, prepare_batch_inputs,
                                    start_end_collate)
 from utils.basic_utils import AverageMeter, save_json, save_jsonl
 from utils.span_utils import span_cxw_to_xx
@@ -303,7 +303,7 @@ def setup_model(opt):
     """setup model/criterion/optimizer/scheduler and load checkpoints when needed"""
     logger.info("setup model/criterion/optimizer/scheduler")
     
-    model = build_umt(opt)
+    model = build_model(opt)
     criterion = build_criterion(opt)
     
     if opt.device.type == "cuda":

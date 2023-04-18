@@ -26,7 +26,7 @@ fi
 
 
 ### training
-PYTHONPATH=$PYTHONPATH:. python umt/train.py \
+PYTHONPATH=$PYTHONPATH:. python mh_detr/train.py \
 --v_feat_dirs ${v_feat_dirs[@]} \
 --v_feat_dim ${v_feat_dim} \
 --t_feat_dir ${t_feat_dir} \

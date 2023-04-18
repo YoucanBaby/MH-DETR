@@ -8,6 +8,13 @@ from timm.models.layers import DropPath
 from torch import nn
 
 
+def inverse_sigmoid(x, eps=1e-3):
+    x = x.clamp(min=0, max=1)
+    x1 = x.clamp(min=eps)
+    x2 = (1 - x).clamp(min=eps)
+    return torch.log(x1/x2)
+
+
 def get_activation_fn(activation):
     if activation == "":
         return nn.Identity()
@@ -39,8 +46,8 @@ def get_key_padding_mask(mask, mask_type, T):
         raise RuntimeError(f"mask type should be 'vid' or 'txt', not '{mask_type}'.")
 
 
-def get_clones(module, N):
-    return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
+def get_clones(module, depth):
+    return nn.ModuleList([copy.deepcopy(module) for i in range(depth)])
 
 
 class Pooling(nn.Module):
@@ -401,17 +408,3 @@ class WeightedBCE(nn.Module):
             loss = torch.sum(loss)
         
         return loss
-
-
-if __name__ == '__main__':
-    # 测试masked_fill_(), masked_fill()不更新变量, masked_fill_()更新变量
-    bce = WeightedBCE()
-    
-    mask = torch.tensor([[1, 1, 0], [1, 1, 0]])
-    output = torch.tensor([[1, 1, 1], [1, 0.5, 0]])
-    target = torch.tensor([[1, 1, 0], [1, 0, 0]])
-    
-    loss = bce(output, target, mask)
-    
-    print(loss)
-    

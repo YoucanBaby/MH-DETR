@@ -5,19 +5,19 @@ from einops import einsum, rearrange, reduce, repeat
 from timm.models.layers import trunc_normal_
 from torch import nn
 
-from umt.models.modules.backbone import UmtBackbone
-from umt.models.modules.input_ffn import InputFFN
-from umt.models.modules.predictor import UmtPredictor
+from mh_detr.models.modules.backbone import Backbone
+from mh_detr.models.modules.input_ffn import InputFFN
+from mh_detr.models.modules.predictor import Predictor
 
 
-class UMT(nn.Module):
+class MHDETR(nn.Module):
     def __init__(self, backbone, v_feat_dim, t_feat_dim, 
                         input_vid_ffn_dropout=0.5, input_txt_ffn_dropout=0.3, qkv_dim=256, dropout=0.1):
         super().__init__()
        
         self.input_ffn = InputFFN(v_feat_dim, t_feat_dim, qkv_dim, input_vid_ffn_dropout, input_txt_ffn_dropout)
         self.backbone = backbone
-        self.predictor = UmtPredictor(qkv_dim, dropout)
+        self.predictor = Predictor(qkv_dim, dropout)
         
     def forward(self, vid, txt, vid_mask, txt_mask):
         """The forward expects four tensors:
@@ -28,31 +28,26 @@ class UMT(nn.Module):
         """
         outputs = {}
         
-        vid, txt = self.input_ffn(vid, txt)         #[B, T, d], [B, N, d], [B, d], [B, d]
+        vid, txt = self.input_ffn(vid, txt)                             #[B, T, d], [B, N, d]
         
-        vghd_qry, vg_qry = self.backbone(vid, txt, vid_mask, txt_mask)    #[B, T, d], [B, M, d]
-        outputs.update(dict(
-            vghd_qry=vghd_qry, 
-            vg_qry=vg_qry
-        ))
-        
+        mrhd_qry, mr_qry = self.backbone(vid, txt, vid_mask, txt_mask)  #[B, T, d], [B, M, d]
+
         outputs.update(
-            self.predictor(vghd_qry, vg_qry)
+            self.predictor(mrhd_qry, mr_qry)
         )
         
         return outputs
 
 
-def build_umt(opt):
-    """Create model of UMT"""
-    umt_backbone = UmtBackbone(
+def build_model(opt):
+    backbone = Backbone(
         opt.max_v_l, opt.max_q_l,
         opt.qkv_dim, opt.num_heads, 
         opt.num_vg_qry,
         opt.dropout, opt.activation, opt.drop_path,
     )
-    model = UMT(
-        umt_backbone, 
+    model = MHDETR(
+        backbone, 
         opt.v_feat_dim, opt.t_feat_dim, 
         opt.input_vid_ffn_dropout, opt.input_txt_ffn_dropout,
         opt.qkv_dim, 

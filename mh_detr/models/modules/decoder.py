@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from umt.models.modules.utils import get_clones, with_pos_embed
+from mh_detr.models.modules.utils import get_clones, with_pos_embed
 
 
 class Decoder(nn.Module):

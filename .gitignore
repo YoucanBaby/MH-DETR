@@ -14,6 +14,8 @@ run_on_video/
 .vscode/
 visualization/
 _visualization/
+moment_detr/
+umt/
 
 test.py
 

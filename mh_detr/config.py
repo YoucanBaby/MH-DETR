@@ -29,7 +29,7 @@ class BaseOptions(object):
         parser.add_argument("--epochs", type=int, default=200, help="number of epochs to run")
         parser.add_argument("--eval_epoch_interval", type=int, default=5, help="number of interval eval at training")
         
-        parser.add_argument("--dset_name", type=str, default="umt")
+        parser.add_argument("--dset_name", type=str, default="mh_detr")
         parser.add_argument("--eval_split_name", type=str, default="val", 
                             help="should match keys in video_duration_idx_path, must set for MR")
         parser.add_argument("--draw_res", action="store_true", help="Save visualization res for MR and HD")
@@ -92,12 +92,12 @@ class BaseOptions(object):
         parser.add_argument('--sched', type=str, default='step', metavar='SCHEDULER', choices=['cosine', 'step'], 
                             help='LR scheduler (default: "step")')
         parser.add_argument("--lr", type=float, default=2e-4, help="learning rate")
-        parser.add_argument('--warmup-lr', type=float, default=5e-7, metavar='LR',
-                        help='warmup learning rate (default: 5e-7)')
+        parser.add_argument('--warmup-lr', type=float, default=1e-4, metavar='LR',
+                        help='warmup learning rate (default: 1e-4)')
         parser.add_argument('--warmup-epochs', type=int, default=0, metavar='N',
                             help='epochs to warmup LR, if scheduler supports')
-        parser.add_argument('--min-lr', type=float, default=5e-6, metavar='LR',
-                            help='lower lr bound for cyclic schedulers that hit 0 (5e-6)')
+        parser.add_argument('--min-lr', type=float, default=1e-4, metavar='LR',
+                            help='lower lr bound for cyclic schedulers that hit 0 (1e-4)')
         parser.add_argument('--cooldown-epochs', type=int, default=10, metavar='N',
                             help='epochs to cooldown LR at min_lr, after cyclic schedule ends')
         parser.add_argument('--decay-epochs', type=float, default=1000, metavar='N',
@@ -142,7 +142,7 @@ class BaseOptions(object):
             parser.add_argument('--aux_loss', action='store_true', help="Enable auxiliary decoding losses (loss at each layer)")
             parser.add_argument("--span_loss_type", default="l1", choices=['l1', 'ce'], type=str,
                                 help="l1: (center-x, width) regression. ce: (st_idx, ed_idx) classification.")
-              
+            
         #TODO delete
         if 1:
             # Do not change

@@ -4,14 +4,14 @@ from torch import nn
 
 from einops import rearrange, repeat, reduce, einsum
 
-from umt.models.modules.utils import WeightedBCE
-from umt.models.modules.misc import accuracy
-from umt.models.modules.matcher import build_matcher
+from mh_detr.models.modules.utils import WeightedBCE
+from mh_detr.models.modules.misc import accuracy
+from mh_detr.models.modules.matcher import build_matcher
 from utils.span_utils import generalized_temporal_iou, span_cxw_to_xx
 
 
-class UmtCriterion(nn.Module):
-    """ This class computes the loss for UMT.
+class Criterion(nn.Module):
+    """ This class computes the loss for mh_detr.
     """
     
     def __init__(self, matcher, weight_dict=None, coef_eos=0.1, temperature=0.07, max_v_l=75):
@@ -126,7 +126,7 @@ class UmtCriterion(nn.Module):
         The target spans are expected in format (center_x, w), normalized by the image size.
         """
         
-        if self.weight_dict["span_l1"] == 0 or self.weight_dict["span_giou"] == 0:
+        if self.weight_dict["span_l1"] == 0 and self.weight_dict["span_giou"] == 0:
             return {"span_l1": 0, "span_giou": 0}
         
         targets = targets["span_labels"]
@@ -250,7 +250,7 @@ class UmtCriterion(nn.Module):
 
 
 def build_criterion(opt):
-    """Create loss of UMT"""
+    """Create loss of MH_DETR"""
     matcher = build_matcher(opt)
     weight_dict = {
                     "saliency_bce": opt.saliency_bce,
@@ -263,7 +263,7 @@ def build_criterion(opt):
                     "vid_qry_contrastive": opt.vid_qry_contrastive,
                 }
     
-    criterion = UmtCriterion(
+    criterion = Criterion(
                     matcher, 
                     weight_dict,
                     opt.coef_eos,
