@@ -6,6 +6,7 @@ import pickle
 from collections import OrderedDict, Counter
 import pandas as pd
 import sys
+import pathlib
 
 
 def load_pickle(filename):
