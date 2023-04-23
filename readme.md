@@ -73,7 +73,7 @@ Checkpoint download [link](https://drive.google.com/file/d/15Hq5zNoe51eX1M8vA_tE
 bash mh_detr/scripts/train_charades.sh --dset_name ${Dataset_Name}
 ```
 
-Please replace ${Your_Path} with {activitynet, charade, tvsum}.
+Please replace ${Dataset_Name} with {activitynet, charade, tvsum}.
 
 ### Debug
 
