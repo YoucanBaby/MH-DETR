@@ -50,13 +50,13 @@ TODO
 
 ## Usage
 
-**Train on QVHighlights**
+### Train on QVHighlights
 
 ```sh
 bash mh_detr/scripts/train.sh
 ```
 
-**Inference on QVHighlights**
+### Inference on QVHighlights
 
 ```sh
 bash mh_detr/scripts/inference.sh ${Your_Path}/MH-DETR/results/qvhighlights/model_best.ckpt val
@@ -68,7 +68,7 @@ Checkpoint download [link](https://drive.google.com/file/d/15Hq5zNoe51eX1M8vA_tE
 | :-------: | :-------: | :---------: | :----------------: | :------------------: | :----: | :----: |
 |   60.84   |   44.90   |    39.26    |       38.77        |        61.74         |  8.2M  |  0.34  |
 
-**Train on other datasets**
+### Train on other datasets
 
 ```sh
 bash mh_detr/scripts/train_charades.sh --dset_name ${Dataset_Name}
@@ -76,7 +76,7 @@ bash mh_detr/scripts/train_charades.sh --dset_name ${Dataset_Name}
 
 Please replace ${Your_Path} with {activitynet, charade, tvsum}.
 
-Debug
+### Debug
 
 ```sh
 bash mh_detr/scripts/train.sh --debug
