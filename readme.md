@@ -1,4 +1,19 @@
-Prepare the files in the following structure.
+# MH-DETR: Video Moment and Highlight Detection with Cross-modal Transformer
+
+This is our implementation for the paper: **MH-DETR: Video Moment and Highlight Detection with Cross-modal Transformer**
+
+![Alt text](utils/img/modal.png)
+
+# Table of Contents
+
+1. [Preparation](#preparation)
+2. [Datasets](#datasets)
+2. [Usage](#usage)
+3. [Citation](#citation)
+
+## Preparation
+
+The released code consists of the following files.
 
 ```
 MH-DETR
@@ -11,9 +26,16 @@ MH-DETR
 │   │   └── tvsum_{train,val}.jsonl
 │   └── highlight_{train,val,test}_release.jsonl
 ├── features
+│   ├── activitynet
+│   │   └── c3d.hdf5
 │   ├── charades
-│   │   └── id3.hdf5
-|	└──	TODO...
+│   |   ├── vgg.hdf5
+│   │   └── i3d.hdf5
+|	├──	clip_features
+|	├── clip_text_features
+|	├── slowfast_features
+|	├── tvsum
+|	|   └── ...
 ├── mh_detr
 ├── standalone_eval
 ├── utils
@@ -22,16 +44,16 @@ MH-DETR
 └── ···
 ```
 
+## Datasets
+
+TODO
+
+## Usage
+
 **Train on QVHighlights**
 
 ```sh
 bash mh_detr/scripts/train.sh
-```
-
-Debug
-
-```sh
-bash mh_detr/scripts/train.sh --debug
 ```
 
 **Inference on QVHighlights**
@@ -46,3 +68,20 @@ Checkpoint download [link](https://drive.google.com/file/d/15Hq5zNoe51eX1M8vA_tE
 | :-------: | :-------: | :---------: | :----------------: | :------------------: | :----: | :----: |
 |   60.84   |   44.90   |    39.26    |       38.77        |        61.74         |  8.2M  |  0.34  |
 
+**Train on other datasets**
+
+```sh
+bash mh_detr/scripts/train_charades.sh --dset_name ${Dataset_Name}
+```
+
+Please replace ${Your_Path} with {activitynet, charade, tvsum}.
+
+Debug
+
+```sh
+bash mh_detr/scripts/train.sh --debug
+```
+
+## Citation
+
+TDOD
