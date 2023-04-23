@@ -34,8 +34,8 @@ MH-DETR
 |   ├──	clip_features
 |   ├── clip_text_features
 |   ├── slowfast_features
-|   ├── tvsum
-|   |   └── ...
+|   └── tvsum
+|       └── ...
 ├── mh_detr
 ├── standalone_eval
 ├── utils
