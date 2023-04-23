@@ -115,7 +115,7 @@ class BackboneV2(nn.Module):
         self.mr_dec = Decoder(mr_dec_layer, depth=4)
         
         # Query
-        self.mr_qry = nn.Parameter(torch.zeros(num_mr_qry, qkv_dim))    #(num_vg_qry, 256)
+        self.mr_qry = nn.Parameter(torch.zeros(num_mr_qry, 2))    #(num_vg_qry, 256)
         self.mr_ref = None
 
         # Position Embedding

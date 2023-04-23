@@ -136,7 +136,9 @@ class StartEndDataset(Dataset):
                 model_inputs["saliency_pos_labels"], \
                 model_inputs["saliency_neg_labels"] = \
                     self.get_saliency_labels_sub_as_query(meta["relevant_windows"][0], ctx_l)
-                    
+        
+        # print(model_inputs, model_inputs["saliency_pos_labels"],  model_inputs["saliency_neg_labels"])
+        
         return dict(meta=meta, model_inputs=model_inputs)
     
     def _getitem_charades(self, index):

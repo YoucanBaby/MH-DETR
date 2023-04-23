@@ -16,13 +16,20 @@ class HungarianMatcher(nn.Module):
     """
     def __init__(self, span_score=1, span_l1=1, span_giou=1, span_loss_type="l1", max_v_l=75) -> None:
         super().__init__()
+        # Set it to true when the ablation experiment only uses the loss function for hd.
+        # span_score = 4
+        # span_l1 = 10
+        # span_giou = 1
+        
+        assert span_score != 0 or span_l1 != 0 or span_giou != 0  #不能全为0
+
         self.span_score = span_score
         self.span_l1 = span_l1
         self.span_giou = span_giou
         self.span_loss_type = span_loss_type
         self.max_v_l = max_v_l
         self.foreground_label = 0
-        assert span_score != 0 or span_l1 != 0 or span_giou != 0  #不能全为0
+        
         
     @torch.no_grad()
     def forward(self, outputs, targets):

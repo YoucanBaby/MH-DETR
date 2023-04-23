@@ -16,6 +16,8 @@ visualization/
 _visualization/
 moment_detr/
 umt/
+qd_detr/
+/.gitignore
 
 test.py
 
