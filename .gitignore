@@ -18,6 +18,8 @@ moment_detr/
 umt/
 qd_detr/
 /.gitignore
+.gitignore
+*.gitignore
 
 test.py
 
