@@ -31,11 +31,11 @@ MH-DETR
 │   ├── charades
 │   |   ├── vgg.hdf5
 │   │   └── i3d.hdf5
-|	├──	clip_features
-|	├── clip_text_features
-|	├── slowfast_features
-|	├── tvsum
-|	|   └── ...
+|   ├──	clip_features
+|   ├── clip_text_features
+|   ├── slowfast_features
+|   ├── tvsum
+|   |   └── ...
 ├── mh_detr
 ├── standalone_eval
 ├── utils
