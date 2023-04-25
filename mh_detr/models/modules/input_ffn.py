@@ -16,6 +16,13 @@ class InputFFN(nn.Module):
             LinearLayer(qkv_dim, qkv_dim, layer_norm=True, dropout=input_vid_ffn_dropout, relu=True),
             nn.LayerNorm(qkv_dim),
         )
+        # self.input_video_ffn = nn.Sequential(
+        #     nn.AvgPool1d(2, stride=2),
+        #     LinearLayer(v_feat_dim // 2, v_feat_dim // 4, layer_norm=True, dropout=0.3, relu=True),
+        #     nn.AvgPool1d(2, stride=2),
+        #     LinearLayer(v_feat_dim // 8, qkv_dim, layer_norm=True, dropout=0.3, relu=True),
+        #     nn.LayerNorm(qkv_dim),
+        # )
         self.input_text_ffn = nn.Sequential(
             LinearLayer(t_feat_dim, qkv_dim, layer_norm=True, dropout=input_txt_ffn_dropout, relu=True),
             LinearLayer(qkv_dim, qkv_dim, layer_norm=True, dropout=input_txt_ffn_dropout, relu=True),
