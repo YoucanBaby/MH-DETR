@@ -127,4 +127,11 @@ bash mh_detr/scripts/train.sh --debug
 
 ## Citation
 
-- [ ] TDOD
+```
+@article{xu2023mh,
+  title={MH-DETR: Video Moment and Highlight Detection with Cross-modal Transformer},
+  author={Xu, Yifang and Sun, Yunzhuo and Li, Yang and Shi, Yilei and Zhu, Xiaoxiang and Du, Sidan},
+  journal={arXiv preprint arXiv:2305.00355},
+  year={2023}
+}
+```

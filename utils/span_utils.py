@@ -103,6 +103,7 @@ def generalized_temporal_iou(spans1, spans2):
     """
     spans1 = spans1.float()
     spans2 = spans2.float()
+    
     assert (spans1[:, 1] >= spans1[:, 0]).all()
     assert (spans2[:, 1] >= spans2[:, 0]).all()
     iou, union = temporal_iou(spans1, spans2)
