@@ -12,7 +12,6 @@ With the increasing demand for video understanding, video moment and highlight d
 
 1. [Setup](##Setup)
 2. [Usage](##Usage)
-3. [Citation](##Citation)
 
 ## Setup
 
@@ -125,13 +124,3 @@ Please replace ${Dataset_Name} with {activitynet, charades, tvsum}.
 bash mh_detr/scripts/train.sh --debug
 ```
 
-## Citation
-
-```
-@article{xu2023mh,
-  title={MH-DETR: Video Moment and Highlight Detection with Cross-modal Transformer},
-  author={Xu, Yifang and Sun, Yunzhuo and Li, Yang and Shi, Yilei and Zhu, Xiaoxiang and Du, Sidan},
-  journal={arXiv preprint arXiv:2305.00355},
-  year={2023}
-}
-```
