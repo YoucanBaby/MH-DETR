@@ -1,3 +1,5 @@
+
+
 # MH-DETR: Video Moment and Highlight Detection with Cross-modal Transformer
 
 This is our implementation for the paper: **MH-DETR: Video Moment and Highlight Detection with Cross-modal Transformer**
@@ -51,7 +53,7 @@ MH-DETR
 # create conda env
 conda create --name mh_detr python=3.9
 # activate env
-conda actiavte mh_detr
+conda activate mh_detr
 # install pytorch 1.13.1
 conda install pytorch=1.13.1 torchvision torchaudio -c pytorch
 # install other python packages
@@ -123,4 +125,3 @@ Please replace ${Dataset_Name} with {activitynet, charades, tvsum}.
 ```sh
 bash mh_detr/scripts/train.sh --debug
 ```
-
